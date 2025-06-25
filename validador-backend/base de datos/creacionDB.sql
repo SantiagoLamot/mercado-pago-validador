@@ -8,6 +8,7 @@ CREATE TABLE usuarios_tb (
     contrasena VARCHAR(255) NOT NULL,
     nombre VARCHAR(50),
     apellido VARCHAR(50),
+    nombre_empresa VARCHAR(50),
     expiracion_suscripcion DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
