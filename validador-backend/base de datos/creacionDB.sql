@@ -34,3 +34,15 @@ CREATE TABLE state_oauth_tb (
     creado DATETIME NOT NULL
 );
 
+CREATE TABLE tokens_tb (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(500) UNIQUE,
+    token_type ENUM('BEARER') DEFAULT 'BEARER',
+    is_revoked BOOLEAN NOT NULL,
+    is_expired BOOLEAN NOT NULL,
+    usuario_id BIGINT NOT NULL,
+    CONSTRAINT fk_token_usuario
+        FOREIGN KEY (usuario_id)
+        REFERENCES usuarios_tb(id) 
+        ON DELETE CASCADE
+);
