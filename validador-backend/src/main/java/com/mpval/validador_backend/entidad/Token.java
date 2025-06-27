@@ -5,12 +5,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,10 +24,10 @@ public class Token {
     private Long id;
     
     private String token;
-    private Token_Type token_type = Token_Type.BEARER;
-    private Boolean isRevoked;
-    private Boolean isExpired;
-    @OneToMany
+    private Token_Type tokenType = Token_Type.BEARER;
+    private Boolean revoked;
+    private Boolean expired;
+    @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
     
