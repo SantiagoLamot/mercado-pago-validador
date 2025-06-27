@@ -1,21 +1,19 @@
-package com.mpval.validador_backend.servicio;
+package com.mpval.validador_backend.jwt.service;
 
+import java.security.Key;
 import java.util.Date;
-import java.util.Map;
-
-import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.mpval.validador_backend.entidad.Usuario;
+import com.mpval.validador_backend.Usuario.entity.Usuario;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 @Service
-public class JwtServicio {
+public class JwtService {
     @Value("${secret-key}")
     public String secretKey;
 
@@ -27,11 +25,12 @@ public class JwtServicio {
 
     public String extractUsername(String token) {
         try {
-            return Jwts.parser()
-                    .verifyWith(getSignInKey())
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey())
+                    .setAllowedClockSkewSeconds(60) // evita errores por diferencias de hora
                     .build()
-                    .parseSignedClaims(token)
-                    .getPayload()
+                    .parseClaimsJws(token)
+                    .getBody()
                     .getSubject();
         } catch (io.jsonwebtoken.security.SignatureException ex) {
             throw new RuntimeException("Token con firma inválida", ex);
@@ -52,10 +51,10 @@ public class JwtServicio {
         System.out.println("Tiempo expiracion: " + expiration);
         return Jwts
                 .builder()
-                .claims(Map.of("name", user.getNombre()))
-                .subject(user.getNombreDeUsuario())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .setSubject(user.getNombreDeUsuario())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .claim("name", user.getNombre())
                 .signWith(getSignInKey())
                 .compact();
     }
@@ -70,16 +69,17 @@ public class JwtServicio {
     }
 
     private Date extractExpiration(String token) {
-        return Jwts.parser()
-                .verifyWith(getSignInKey())
+        return Jwts
+                .parserBuilder()
+                .setSigningKey(getSignInKey())
                 .build()
-                .parseSignedClaims(token)
-                .getPayload()
+                .parseClaimsJws(token)
+                .getBody()
                 .getExpiration();
     }
 
-    private SecretKey getSignInKey() {
-        final byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
+    private Key getSignInKey() {
+    byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+    return Keys.hmacShaKeyFor(keyBytes);
+}
 }

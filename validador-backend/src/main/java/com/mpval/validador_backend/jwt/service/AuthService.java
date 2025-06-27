@@ -1,4 +1,4 @@
-package com.mpval.validador_backend.servicio;
+package com.mpval.validador_backend.jwt.service;
 
 import java.util.List;
 
@@ -8,24 +8,25 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.mpval.validador_backend.dto.AuthRequestDTO;
-import com.mpval.validador_backend.dto.TokenResponse;
-import com.mpval.validador_backend.dto.UsuarioRequestDTO;
-import com.mpval.validador_backend.entidad.Token;
-import com.mpval.validador_backend.entidad.Usuario;
-import com.mpval.validador_backend.repositorio.TokenRepositorio;
-import com.mpval.validador_backend.repositorio.UsuarioRepositorio;
+import com.mpval.validador_backend.Usuario.entity.Usuario;
+import com.mpval.validador_backend.Usuario.repository.UsuarioRepository;
+import com.mpval.validador_backend.jwt.dto.AuthRequestDTO;
+import com.mpval.validador_backend.jwt.dto.TokenResponse;
+import com.mpval.validador_backend.jwt.dto.UsuarioRequestDTO;
+import com.mpval.validador_backend.jwt.entity.Token;
+import com.mpval.validador_backend.jwt.repository.TokenRepository;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class AuthServicio {
-    private final UsuarioRepositorio usuarioRepositorio;
-    private final TokenRepositorio tokenRepositorio;
+public class AuthService {
+    private final UsuarioRepository usuarioRepositorio;
+    private final TokenRepository tokenRepositorio;
     private final PasswordEncoder passwordEncoder;
-    private final JwtServicio jwtServicio;
+    private final JwtService jwtServicio;
     private final AuthenticationManager authenticationManager;
+    
     public TokenResponse register(final UsuarioRequestDTO request) {
         final Usuario user = Usuario.builder()
                 .nombreDeUsuario(request.getNombreDeUsuario())
@@ -41,6 +42,7 @@ public class AuthServicio {
         saveUserToken(savedUser, jwtToken);
         return new TokenResponse(jwtToken, refreshToken);
     }
+
     public TokenResponse authenticate(final AuthRequestDTO request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -61,7 +63,6 @@ public class AuthServicio {
         final Token token = Token.builder()
                 .usuario(user)
                 .token(jwtToken)
-                .tokenType(Token.Token_Type.BEARER)
                 .expired(false)
                 .revoked(false)
                 .build();
