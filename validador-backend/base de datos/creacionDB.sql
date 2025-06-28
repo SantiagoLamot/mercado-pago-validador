@@ -6,9 +6,9 @@ CREATE TABLE usuarios_tb (
     nombre_de_usuario VARCHAR(50) NOT NULL UNIQUE,
     correo VARCHAR(100) NOT NULL UNIQUE,
     contrasena VARCHAR(255) NOT NULL,
-    nombre VARCHAR(50),
-    apellido VARCHAR(50),
-    nombre_empresa VARCHAR(50),
+    nombre VARCHAR(50) NOT NULL,
+    apellido VARCHAR(50) NOT NULL,
+    nombre_empresa VARCHAR(50) NOT NULL,
     expiracion_suscripcion DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -38,8 +38,8 @@ CREATE TABLE tokens_tb (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     token VARCHAR(500) UNIQUE,
     token_type ENUM('BEARER') DEFAULT 'BEARER',
-    is_revoked BOOLEAN NOT NULL,
-    is_expired BOOLEAN NOT NULL,
+    revoked BOOLEAN NOT NULL,
+    expired BOOLEAN NOT NULL,
     usuario_id BIGINT NOT NULL,
     CONSTRAINT fk_token_usuario
         FOREIGN KEY (usuario_id)
