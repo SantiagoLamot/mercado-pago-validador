@@ -1,4 +1,4 @@
-package com.mpval.validador_backend.Mercado_Pago.entity;
+package com.mpval.validador_backend.mercado_pago.entity;
 
 import java.time.LocalDateTime;
 
@@ -24,4 +24,9 @@ public class StateOauth {
     private String state;
     private Long usuarioId;
     private LocalDateTime creado;
+
+    public StateOauth(Long idUsuarioLogueado, String state2) {
+        this.usuarioId = idUsuarioLogueado;
+        this.state = state2;
+    }
 }
