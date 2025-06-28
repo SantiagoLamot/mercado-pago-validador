@@ -6,7 +6,7 @@ import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.mpval.validador_backend.Usuario.entity.Usuario;
+import com.mpval.validador_backend.usuario.entity.Usuario;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;

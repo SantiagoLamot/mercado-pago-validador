@@ -14,10 +14,10 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.mpval.validador_backend.Usuario.entity.Usuario;
-import com.mpval.validador_backend.Usuario.repository.UsuarioRepository;
 import com.mpval.validador_backend.jwt.repository.TokenRepository;
 import com.mpval.validador_backend.jwt.service.JwtService;
+import com.mpval.validador_backend.usuario.entity.Usuario;
+import com.mpval.validador_backend.usuario.repository.UsuarioRepository;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

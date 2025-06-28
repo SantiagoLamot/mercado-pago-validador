@@ -8,13 +8,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.mpval.validador_backend.Usuario.entity.Usuario;
-import com.mpval.validador_backend.Usuario.repository.UsuarioRepository;
 import com.mpval.validador_backend.jwt.dto.AuthRequestDTO;
 import com.mpval.validador_backend.jwt.dto.TokenResponse;
 import com.mpval.validador_backend.jwt.dto.UsuarioRequestDTO;
 import com.mpval.validador_backend.jwt.entity.Token;
 import com.mpval.validador_backend.jwt.repository.TokenRepository;
+import com.mpval.validador_backend.usuario.entity.Usuario;
+import com.mpval.validador_backend.usuario.repository.UsuarioRepository;
 
 import lombok.RequiredArgsConstructor;
 

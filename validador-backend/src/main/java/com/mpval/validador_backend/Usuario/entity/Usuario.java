@@ -1,4 +1,4 @@
-package com.mpval.validador_backend.Usuario.entity;
+package com.mpval.validador_backend.usuario.entity;
 
 import java.time.LocalDateTime;
 

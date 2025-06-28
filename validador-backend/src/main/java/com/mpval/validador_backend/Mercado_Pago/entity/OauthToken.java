@@ -1,8 +1,8 @@
-package com.mpval.validador_backend.Mercado_Pago.entity;
+package com.mpval.validador_backend.mercado_pago.entity;
 
 import java.time.LocalDateTime;
 
-import com.mpval.validador_backend.Usuario.entity.Usuario;
+import com.mpval.validador_backend.usuario.entity.Usuario;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
