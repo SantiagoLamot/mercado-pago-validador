@@ -28,5 +28,6 @@ public class StateOauth {
     public StateOauth(Long idUsuarioLogueado, String state2) {
         this.usuarioId = idUsuarioLogueado;
         this.state = state2;
+        this.creado = LocalDateTime.now();
     }
 }
