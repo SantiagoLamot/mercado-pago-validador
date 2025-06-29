@@ -1,7 +1,6 @@
 package com.mpval.validador_backend.mercado_pago.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +16,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import com.mpval.validador_backend.jwt.service.JwtService;
 import com.mpval.validador_backend.mercado_pago.dto.OauthTokenRequestDTO;
 import com.mpval.validador_backend.mercado_pago.entity.OauthToken;
 import com.mpval.validador_backend.mercado_pago.repository.OauthTokenRepository;
@@ -40,21 +40,23 @@ public class OauthTokenService {
     private final OauthTokenRepository oauthRepository;
     private final StateOauthService stateOauthService;
     private final EncriptadoUtil encriptadoUtil;
+    private final JwtService jwtService;
 
     public OauthTokenService(UsuarioService usuariosService, OauthTokenRepository oauthRepository,
-            StateOauthService stateOauthService, EncriptadoUtil encriptadoUtil) {
+            StateOauthService stateOauthService, EncriptadoUtil encriptadoUtil, JwtService j) {
         this.usuariosService = usuariosService;
         this.oauthRepository = oauthRepository;
         this.stateOauthService = stateOauthService;
         this.encriptadoUtil = encriptadoUtil;
+        this.jwtService = j;
     }
 
     public String UrlAutorizacion() {
-        Long idUsuarioLogueado = usuariosService.obtenerUsuariosPorId(1L)// ACA OBTENER EL ID DEL USUARIO LOGUEADO
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"))
-                .getId();
+        String nombreDeUsuario = jwtService.obtenerNombreDeUsuarioAutenticado();
+        Usuario usuario = usuariosService.obtenerUsuarioPorNombreDeUsuario(nombreDeUsuario)// ACA OBTENER EL ID DEL USUARIO LOGUEADO
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         String state = UUID.randomUUID().toString();
-        stateOauthService.guardarStateOauth(idUsuarioLogueado, state);
+        stateOauthService.guardarStateOauth(usuario.getId(), state);
         return "https://auth.mercadopago.com.ar/authorization?response_type=code" +
                 "&client_id=" + clientId +
                 "&redirect_uri=" + redirectUrl +
@@ -145,9 +147,5 @@ public class OauthTokenService {
             }
             return false;
         }
-    }
-
-    public List<OauthToken> obtenerTokenDeUsuariosVendedores() {
-        return oauthRepository.findByUsuario_VendedorTrue();
     }
 }
