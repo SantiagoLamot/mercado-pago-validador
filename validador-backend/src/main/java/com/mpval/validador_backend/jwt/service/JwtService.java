@@ -4,6 +4,9 @@ import java.security.Key;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.mpval.validador_backend.usuario.entity.Usuario;
@@ -48,7 +51,6 @@ public class JwtService {
     }
 
     private String buildToken(final Usuario user, final long expiration) {
-        System.out.println("Tiempo expiracion: " + expiration);
         return Jwts
                 .builder()
                 .setSubject(user.getNombreDeUsuario())
@@ -79,7 +81,13 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-    byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-    return Keys.hmacShaKeyFor(keyBytes);
-}
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public String obtenerNombreDeUsuarioAutenticado() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String nombreDeUsuario = ((UserDetails) auth.getPrincipal()).getUsername();
+        return nombreDeUsuario;
+    }
 }
