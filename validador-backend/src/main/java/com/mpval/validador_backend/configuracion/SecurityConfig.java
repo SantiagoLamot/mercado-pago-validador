@@ -35,49 +35,44 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
         http
-            
+
                 .csrf(AbstractHttpConfigurer::disable)
-            
                 .authorizeHttpRequests(req ->
-                        req.requestMatchers("/auth/**")
-                                .permitAll()
-                                .anyRequest()
-                                .authenticated()
+                req.requestMatchers("/auth/**","/oauth/callback", "/ws/**", "/webhook")
+                .permitAll()
+                .anyRequest()
+                .authenticated()
                 )
-            
+
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
-            
+
                 .authenticationProvider(authenticationProvider)
-            
+
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-            
-                .logout(logout ->
-                        logout.logoutUrl("/auth/logout")
-                                .addLogoutHandler(this::logout)
-                                .logoutSuccessHandler((request, response, authentication) -> 
-                                        SecurityContextHolder.clearContext())
-                );
-    
+
+                .logout(logout -> logout.logoutUrl("/auth/logout")
+                        .addLogoutHandler(this::logout)
+                        .logoutSuccessHandler(
+                                (request, response, authentication) -> SecurityContextHolder.clearContext()));
+
         return http.build();
     }
 
     private void logout(
             final HttpServletRequest request, final HttpServletResponse response,
-            final Authentication authentication
-    ) {
-    
+            final Authentication authentication) {
+
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return;
         }
-    
+
         final String jwt = authHeader.substring(7);
 
-    
         final Token storedToken = tokenRepositorio.findByToken(jwt).orElse(null);
 
         if (storedToken != null) {
-        
+
             storedToken.setExpired(true);
             storedToken.setRevoked(true);
             tokenRepositorio.save(storedToken);
@@ -86,4 +81,3 @@ public class SecurityConfig {
         }
     }
 }
-
