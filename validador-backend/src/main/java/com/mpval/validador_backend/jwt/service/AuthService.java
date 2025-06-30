@@ -40,7 +40,7 @@ public class AuthService {
         final String jwtToken = jwtServicio.generateToken(savedUser);
         final String refreshToken = jwtServicio.generateRefreshToken(savedUser);
         saveUserToken(savedUser, jwtToken);
-        return new TokenResponse(jwtToken, refreshToken);
+        return new TokenResponse(jwtToken, refreshToken,user.getNombreDeUsuario());
     }
 
     public TokenResponse authenticate(final AuthRequestDTO request) {
@@ -56,7 +56,7 @@ public class AuthService {
         final String refreshToken = jwtServicio.generateRefreshToken(user);
         revokeAllUserTokens(user);
         saveUserToken(user, accessToken);
-        return new TokenResponse(accessToken, refreshToken);
+        return new TokenResponse(accessToken, refreshToken, user.getNombreDeUsuario());
     }
 
     private void saveUserToken(Usuario user, String jwtToken) {
@@ -97,6 +97,6 @@ public class AuthService {
         final String accessToken = jwtServicio.generateRefreshToken(user);
         revokeAllUserTokens(user);
         saveUserToken(user, accessToken);
-        return new TokenResponse(accessToken, refreshToken);
+        return new TokenResponse(accessToken, refreshToken, user.getNombreDeUsuario());
     }
 }
