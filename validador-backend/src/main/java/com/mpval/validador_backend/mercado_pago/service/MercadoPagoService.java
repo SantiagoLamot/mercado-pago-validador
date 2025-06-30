@@ -62,7 +62,7 @@ public class MercadoPagoService {
             String estado = payment.getStatus();
 
             // Se obtiene el id del usuario de la app mediante el id de mp
-            Long idMp = payment.getId();
+            Long idMp = webhook.getUser_id();
             OauthToken oauthToken = oauthRepository.findByUserId(idMp)
                     .orElseThrow(() -> new RuntimeException("Error al obtener id del usuario de MP"));
             Usuario usuario = usuariosRepository.getById(oauthToken.getUsuario().getId());
