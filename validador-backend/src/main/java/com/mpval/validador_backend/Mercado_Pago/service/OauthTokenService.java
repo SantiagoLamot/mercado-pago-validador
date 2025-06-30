@@ -30,8 +30,11 @@ public class OauthTokenService {
     @Value("${clientId}")
     String clientId;
 
-    @Value("${redirectUrl}")
+    @Value("${urlCallback}")
     String redirectUrl;
+
+    @Value("${urlWebhook}")
+    String urlWebhook;
 
     @Value("${clientSecret}")
     String clientSecret;
@@ -53,7 +56,8 @@ public class OauthTokenService {
 
     public String UrlAutorizacion() {
         String nombreDeUsuario = jwtService.obtenerNombreDeUsuarioAutenticado();
-        Usuario usuario = usuariosService.obtenerUsuarioPorNombreDeUsuario(nombreDeUsuario)// ACA OBTENER EL ID DEL USUARIO LOGUEADO
+        Usuario usuario = usuariosService.obtenerUsuarioPorNombreDeUsuario(nombreDeUsuario)// ACA OBTENER EL ID DEL
+                                                                                           // USUARIO LOGUEADO
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         String state = UUID.randomUUID().toString();
         stateOauthService.guardarStateOauth(usuario.getId(), state);
@@ -87,8 +91,7 @@ public class OauthTokenService {
                 throw new RuntimeException("Error al obtener el token de Mercado Pago");
             }
 
-            guardarTokenNuevo(response.getBody(), usuariosService.obtenerUsuarioPorState(state));
-
+            guardarToken(response.getBody(), usuariosService.obtenerUsuarioPorState(state));
         } catch (HttpClientErrorException e) {
             throw new RuntimeException("Error de cliente: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         } catch (Exception e) {
@@ -96,22 +99,11 @@ public class OauthTokenService {
         }
     }
 
-    public void actualizarToken(OauthTokenRequestDTO oauthTokenDTO, Usuario usuario) {
-        OauthToken token = oauthRepository.findByUsuarioId(usuario.getId())
-                .orElseThrow(() -> new RuntimeException("Error al obtener token para guardar nuevo"));
-        token.setAccessToken(encriptadoUtil.encriptar(oauthTokenDTO.getAccessToken()));
-        token.setRefreshToken(encriptadoUtil.encriptar(oauthTokenDTO.getRefreshToken()));
-        token.setPublicKey(encriptadoUtil.encriptar(oauthTokenDTO.getPublicKey()));
-        token.setUserId(oauthTokenDTO.getUserId());
-        token.setLiveMode(oauthTokenDTO.isLiveMode());
-        token.setExpiresAt(LocalDateTime.now().plusSeconds(oauthTokenDTO.getExpiresIn()));
-        token.setUsuario(usuario);
-
-        oauthRepository.save(token);
-    }
-
-    public void guardarTokenNuevo(OauthTokenRequestDTO oauthTokenDTO, Usuario usuario) {
-        OauthToken token = new OauthToken();
+    public void guardarToken(OauthTokenRequestDTO oauthTokenDTO, Usuario usuario) {
+        OauthToken token = oauthRepository.findByUsuarioId(usuario.getId()).orElse(null);
+        if (token == null) {
+            token = new OauthToken();
+        }
         token.setAccessToken(encriptadoUtil.encriptar(oauthTokenDTO.getAccessToken()));
         token.setRefreshToken(encriptadoUtil.encriptar(oauthTokenDTO.getRefreshToken()));
         token.setPublicKey(encriptadoUtil.encriptar(oauthTokenDTO.getPublicKey()));
