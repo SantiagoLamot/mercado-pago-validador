@@ -1,5 +1,7 @@
 package com.mpval.validador_backend.mercado_pago.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -12,6 +14,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import com.mercadopago.MercadoPagoConfig;
 import com.mercadopago.client.payment.PaymentClient;
 import com.mercadopago.resources.payment.Payment;
 import com.mpval.validador_backend.mercado_pago.dto.OauthTokenRequestDTO;
@@ -26,8 +29,6 @@ import com.mpval.validador_backend.webSocket.service.NotificacionService;
 @Service
 public class MercadoPagoService {
 
-    // @Value("${mercadopago.access-token}")
-    // String accessToken;
     @Value("${clientId}")
     String clientId;
 
@@ -51,24 +52,30 @@ public class MercadoPagoService {
         }
 
         try {
-            // Obtengo el ID de pago
-            String paymentId = webhook.getData().getId();
-
-            // Con el id obtenido busco el pago
-            PaymentClient client = new PaymentClient();
-            Payment payment = client.get(Long.parseLong(paymentId));
-
-            // Obtengo el estado de la transaccion
-            String estado = payment.getStatus();
-
             // Se obtiene el id del usuario de la app mediante el id de mp
             Long idMp = webhook.getUser_id();
             OauthToken oauthToken = oauthRepository.findByUserId(idMp)
                     .orElseThrow(() -> new RuntimeException("Error al obtener id del usuario de MP"));
+
+            // Obtengo el ID de pago
+            Long paymentId = webhook.getData().getId();
+
+            // Con el id obtenido busco el pago
+            MercadoPagoConfig.setAccessToken(oauthToken.getAccessToken());
+            PaymentClient client = new PaymentClient();
+            Payment payment = client.get(paymentId);
+
+            if (payment == null) {
+                throw new RuntimeException("el payment es nulo");
+            }
+
+            // Obtengo el estado de la transaccion
+            String estado = payment.getStatus();
+
             Usuario usuario = usuariosRepository.getById(oauthToken.getUsuario().getId());
             // Se verifica que se encontro el id del usuario en la Transaccion
             if (usuario == null) {
-                System.out.println("No se encontró externalReference (transactionId)");
+                System.out.println("No se encontró el usuario vendedor en BD local");
                 return;
             }
 
@@ -76,11 +83,11 @@ public class MercadoPagoService {
             if ("approved".equalsIgnoreCase(estado)) {
                 // Crear DTO de notificación con datos del pago
                 PagoNotificacionDTO dto = PagoNotificacionDTO.builder()
-                    .mensaje("Recibiste un nuevo pago")
-                    .monto(payment.getTransactionAmount().doubleValue())
-                    .nombreComprador(payment.getPayer().getFirstName() + " " + payment.getPayer().getLastName())
-                    .build();
-                
+                        .mensaje("Recibiste un nuevo pago")
+                        .monto(payment.getTransactionAmount().doubleValue())
+                        .email(payment.getPayer().getEmail())
+                        .hora(LocalDateTime.now())
+                        .build();
                 // Notificar al usuario logueado en WebSocket
                 notificacionService.notificarPagoAUsuario(usuario.getNombreDeUsuario(), dto);
             }
