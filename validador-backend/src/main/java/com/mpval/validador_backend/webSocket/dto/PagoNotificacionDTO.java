@@ -1,5 +1,7 @@
 package com.mpval.validador_backend.webSocket.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class PagoNotificacionDTO {
     private String mensaje;
     private Double monto;
-    private String nombreComprador;
+    private String email;
+    private LocalDateTime hora;
 }
 
