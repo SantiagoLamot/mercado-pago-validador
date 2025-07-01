@@ -18,6 +18,6 @@ public class WebhookDTO {
 
     @Data
     public static class WebhookData {
-        private String id;
+        private Long id;
     }
 }
