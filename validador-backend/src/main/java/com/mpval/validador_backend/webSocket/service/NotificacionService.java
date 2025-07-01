@@ -14,9 +14,9 @@ public class NotificacionService {
         this.messagingTemplate = messagingTemplate;
     }
 
-    public void notificarPagoAUsuario(String username, PagoNotificacionDTO dto) {
+    public void notificarPagoAUsuario(String nombreDeUsuario, PagoNotificacionDTO dto) {
         messagingTemplate.convertAndSendToUser(
-                username,// nombre del usuario autenticado (del JWT)
+                nombreDeUsuario,// nombre del usuario autenticado (del JWT)
                 "/queue/pagos",// destino STOMP que escucha el frontend
                 dto
         );
