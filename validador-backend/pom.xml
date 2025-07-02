@@ -12,7 +12,7 @@
 	<groupId>com.mpval</groupId>
 	<artifactId>validador-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>validador-backend</name>
 	<description>Backend para validar y notificar transferencias recibidas en cuentas de Mercado Pago</description>
 	<url />
@@ -128,6 +128,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>app</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
