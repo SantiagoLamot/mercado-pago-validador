@@ -1,12 +1,39 @@
-import './Navbar.css'
 import { Link } from 'react-router-dom'
+import './Navbar.css'
 
 const Navbar = () => {
   return (
-    <nav className="navbar-custom">
-      <Link to="/" className="navbar-link">Inicio</Link>
-      <Link to="/register" className="navbar-link">Registro</Link>
-      <Link to="/login" className="navbar-link">Login</Link>
+    <nav className="navbar navbar-expand-lg custom-navbar">
+      <div className="container">
+        <Link className="navbar-brand" to="/">Inicio</Link>
+
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav ms-auto">
+            <li className="nav-item">
+              <Link to="/register" className="custom-btn me-2">
+                Registro
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link to="/login" className="custom-btn">
+                Login
+              </Link>
+            </li>
+          </ul>
+        </div>
+      </div>
     </nav>
   )
 }
