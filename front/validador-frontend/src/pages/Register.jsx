@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import './Register.css' 
 
 const Register = () => {
   const [form, setForm] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    nombreDeUsuario: '',
+    correo: '',
+    contrasena: '',
+    confirmPassword: '',
+    nombre: '',
+    apellido: '',
+    empresa: ''
   })
 
   const [errors, setErrors] = useState({})
@@ -22,25 +26,47 @@ const Register = () => {
   const validate = () => {
     const newErrors = {}
 
-    if (!form.username.trim()) newErrors.username = 'El nombre de usuario es obligatorio'
-    if (!form.email.includes('@')) newErrors.email = 'Correo inválido'
-    if (form.password.length < 6) newErrors.password = 'Mínimo 6 caracteres'
-    if (form.password !== form.confirmPassword) newErrors.confirmPassword = 'Las contraseñas no coinciden'
+    if (!form.nombreDeUsuario.trim()) newErrors.nombreDeUsuario = 'El nombre de usuario es obligatorio'
+    if (!form.correo.includes('@')) newErrors.correo = 'Correo inválido'
+    if (form.contrasena.length < 6) newErrors.contrasena = 'Mínimo 6 caracteres'
+    if (form.contrasena !== form.confirmPassword) newErrors.confirmPassword = 'Las contraseñas no coinciden'
+    if (!form.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio'
+    if (!form.apellido.trim()) newErrors.apellido = 'El apellido es obligatorio'
+    if (!form.empresa.trim()) newErrors.empresa = 'La empresa es obligatoria'
 
     return newErrors
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const validationErrors = validate()
     if (Object.keys(validationErrors).length === 0) {
-      // ✅ Simulamos registro exitoso
-      setShowSuccess(true)
+      try {
+        const response = await fetch('/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombreDeUsuario: form.nombreDeUsuario,
+            correo: form.correo,
+            contrasena: form.contrasena,
+            nombre: form.nombre,
+            apellido: form.apellido,
+            empresa: form.empresa
+          })
+        })
 
-      setTimeout(() => {
-        // Después de mostrar el cartel, redirige al home
-        navigate('/')
-      }, 1500) // 1.5 segundos para que se vea el mensaje
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.message || 'Error en el registro')
+        }
+
+        setShowSuccess(true)
+        setTimeout(() => navigate('/'), 1500)
+
+      } catch (err) {
+        setErrors({ general: err.message })
+        setShowSuccess(false)
+      }
     } else {
       setErrors(validationErrors)
       setShowSuccess(false)
@@ -48,55 +74,60 @@ const Register = () => {
   }
 
   return (
-    <div className="container mt-5">
-      <h2 className="mb-4">Registro</h2>
+    <div className="register-container">
+      <h2 className="register-title">Registro</h2>
 
-      {/* ✅ Cartel de éxito */}
       {showSuccess && (
-        <div className="alert alert-success" role="alert">
+        <div className="alert alert-success">
           ¡Registrado con éxito! Redirigiendo al menú principal...
         </div>
       )}
 
+      {errors.general && (
+        <div className="alert alert-danger">
+          {errors.general}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} noValidate>
-        <div className="mb-3">
-          <label className="form-label">Nombre de usuario</label>
+        <div className="form-group">
+          <label>Nombre de usuario</label>
           <input
             type="text"
-            name="username"
-            className={`form-control ${errors.username ? 'is-invalid' : ''}`}
-            value={form.username}
+            name="nombreDeUsuario"
+            className={`form-control ${errors.nombreDeUsuario ? 'is-invalid' : ''}`}
+            value={form.nombreDeUsuario}
             onChange={handleChange}
           />
-          {errors.username && <div className="invalid-feedback">{errors.username}</div>}
+          {errors.nombreDeUsuario && <div className="invalid-feedback">{errors.nombreDeUsuario}</div>}
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Correo electrónico</label>
+        <div className="form-group">
+          <label>Correo electrónico</label>
           <input
             type="email"
-            name="email"
-            className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-            value={form.email}
+            name="correo"
+            className={`form-control ${errors.correo ? 'is-invalid' : ''}`}
+            value={form.correo}
             onChange={handleChange}
           />
-          {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+          {errors.correo && <div className="invalid-feedback">{errors.correo}</div>}
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Contraseña</label>
+        <div className="form-group">
+          <label>Contraseña</label>
           <input
             type="password"
-            name="password"
-            className={`form-control ${errors.password ? 'is-invalid' : ''}`}
-            value={form.password}
+            name="contrasena"
+            className={`form-control ${errors.contrasena ? 'is-invalid' : ''}`}
+            value={form.contrasena}
             onChange={handleChange}
           />
-          {errors.password && <div className="invalid-feedback">{errors.password}</div>}
+          {errors.contrasena && <div className="invalid-feedback">{errors.contrasena}</div>}
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Repetir contraseña</label>
+        <div className="form-group">
+          <label>Repetir contraseña</label>
           <input
             type="password"
             name="confirmPassword"
@@ -107,7 +138,43 @@ const Register = () => {
           {errors.confirmPassword && <div className="invalid-feedback">{errors.confirmPassword}</div>}
         </div>
 
-        <button type="submit" className="btn btn-primary">Registrarse</button>
+        <div className="form-group">
+          <label>Nombre</label>
+          <input
+            type="text"
+            name="nombre"
+            className={`form-control ${errors.nombre ? 'is-invalid' : ''}`}
+            value={form.nombre}
+            onChange={handleChange}
+          />
+          {errors.nombre && <div className="invalid-feedback">{errors.nombre}</div>}
+        </div>
+
+        <div className="form-group">
+          <label>Apellido</label>
+          <input
+            type="text"
+            name="apellido"
+            className={`form-control ${errors.apellido ? 'is-invalid' : ''}`}
+            value={form.apellido}
+            onChange={handleChange}
+          />
+          {errors.apellido && <div className="invalid-feedback">{errors.apellido}</div>}
+        </div>
+
+        <div className="form-group">
+          <label>Empresa</label>
+          <input
+            type="text"
+            name="empresa"
+            className={`form-control ${errors.empresa ? 'is-invalid' : ''}`}
+            value={form.empresa}
+            onChange={handleChange}
+          />
+          {errors.empresa && <div className="invalid-feedback">{errors.empresa}</div>}
+        </div>
+
+        <button type="submit" className="btn-register">Registrarse</button>
       </form>
     </div>
   )
