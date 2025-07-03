@@ -1,0 +1,23 @@
+.navbar-custom {
+  padding: 1rem;
+  background-color: #eee;
+}
+
+.navbar-link {
+  margin-right: 1rem;
+  text-decoration: none;
+  color: #333;
+}
+
+.navbar-link:hover {
+  text-decoration: underline;
+}
+
+.navbar-brand {
+  font-weight: bold;
+  color: #f8f9fa;
+}
+
+.nav-link.active {
+  text-decoration: underline;
+}
