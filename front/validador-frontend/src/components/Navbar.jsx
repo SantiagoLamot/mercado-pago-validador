@@ -1,11 +1,20 @@
-import { Link } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import './Navbar.css'
 
 const Navbar = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    setIsLoggedIn(false)
+    navigate('/')
+  }
+
   return (
     <nav className="navbar navbar-expand-lg custom-navbar">
       <div className="container">
-        <Link className="navbar-brand" to="/">Inicio</Link>
+        <NavLink className="navbar-brand" to="/">Inicio</NavLink>
 
         <button
           className="navbar-toggler"
@@ -21,16 +30,26 @@ const Navbar = () => {
 
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
-            <li className="nav-item">
-              <Link to="/register" className="custom-btn me-2">
-                Registro
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link to="/login" className="custom-btn">
-                Login
-              </Link>
-            </li>
+            {!isLoggedIn ? (
+              <>
+                <li className="nav-item">
+                  <NavLink to="/register" className="custom-btn me-2">
+                    Registro
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink to="/login" className="custom-btn">
+                    Login
+                  </NavLink>
+                </li>
+              </>
+            ) : (
+              <li className="nav-item">
+                <button onClick={handleLogout} className="custom-btn logout-btn">
+                  Cerrar sesión
+                </button>
+              </li>
+            )}
           </ul>
         </div>
       </div>
