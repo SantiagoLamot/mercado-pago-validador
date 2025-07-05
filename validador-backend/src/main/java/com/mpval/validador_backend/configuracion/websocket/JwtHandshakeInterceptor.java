@@ -7,9 +7,9 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import com.mpval.validador_backend.Usuario.entity.Usuario;
+import com.mpval.validador_backend.Usuario.repository.UsuarioRepository;
 import com.mpval.validador_backend.jwt.service.JwtService;
-import com.mpval.validador_backend.usuario.entity.Usuario;
-import com.mpval.validador_backend.usuario.repository.UsuarioRepository;
 
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
