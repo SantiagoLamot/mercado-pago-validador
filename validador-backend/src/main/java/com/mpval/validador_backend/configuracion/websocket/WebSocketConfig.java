@@ -7,8 +7,8 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import com.mpval.validador_backend.Usuario.repository.UsuarioRepository;
 import com.mpval.validador_backend.jwt.service.JwtService;
-import com.mpval.validador_backend.usuario.repository.UsuarioRepository;
 
 @Configuration
 @EnableWebSocketMessageBroker
