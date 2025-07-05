@@ -21,8 +21,8 @@ import com.mpval.validador_backend.mercado_pago.dto.OauthTokenRequestDTO;
 import com.mpval.validador_backend.mercado_pago.entity.OauthToken;
 import com.mpval.validador_backend.mercado_pago.repository.OauthTokenRepository;
 import com.mpval.validador_backend.mercado_pago.util.EncriptadoUtil;
-import com.mpval.validador_backend.usuario.entity.Usuario;
-import com.mpval.validador_backend.usuario.service.UsuarioService;
+import com.mpval.validador_backend.Usuario.entity.Usuario;
+import com.mpval.validador_backend.Usuario.service.UsuarioService;
 
 @Service
 public class OauthTokenService {
