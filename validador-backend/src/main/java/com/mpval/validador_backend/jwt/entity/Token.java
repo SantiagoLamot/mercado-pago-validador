@@ -1,6 +1,6 @@
 package com.mpval.validador_backend.jwt.entity;
 
-import com.mpval.validador_backend.usuario.entity.Usuario;
+import com.mpval.validador_backend.Usuario.entity.Usuario;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
