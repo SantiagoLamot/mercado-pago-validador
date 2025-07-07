@@ -13,4 +13,7 @@ public class TokenResponse {
     String accessToken;
     String refreshToken;
     String userName;
+    Boolean oauth;
+    Boolean licencia;
+    String vencimientoLicencia;
 }
