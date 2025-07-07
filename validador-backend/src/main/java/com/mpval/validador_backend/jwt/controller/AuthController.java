@@ -30,9 +30,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UsuarioRequestDTO request) {
-        System.out.println("1!!!ENTRA ACA!!!");
         try {
-            System.out.println("2!!!ENTRA ACA!!!");
             TokenResponse response = service.register(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
