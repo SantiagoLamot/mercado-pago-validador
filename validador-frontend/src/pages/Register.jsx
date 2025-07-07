@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import './Register.css' 
+import './Register.css'
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -42,7 +42,7 @@ const Register = () => {
     const validationErrors = validate()
     if (Object.keys(validationErrors).length === 0) {
       try {
-        const response = await fetch('/auth/register', {
+        const response = await fetch('http://localhost:8080/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
