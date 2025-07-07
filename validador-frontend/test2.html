@@ -73,5 +73,70 @@
 
     <audio id="sonido-pago" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
 
+    <script>
+        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJTQU5USUFHTyBMQU1PVCIsImlhdCI6MTc1MTMwNzMwMywiZXhwIjoxNzUxMzkzNzAzLCJuYW1lIjoic2FudGlhZ28ifQ.su8HDL8ME4K3V0C45Zkrb_FT5Px8aOPPdvzbp13Bv1c';
+        let stompClient = null;
+        let sonidoHabilitado = false;
+
+        function autorizarSonido() {
+            const sonido = document.getElementById("sonido-pago");
+            sonido.play().then(() => {
+                sonido.pause();
+                sonidoHabilitado = true;
+                alert("🔔 Sonido habilitado correctamente");
+            }).catch(e => {
+                alert("⚠️ No se pudo habilitar el sonido: " + e.message);
+            });
+        }
+
+        function conectarWebSocket() {
+            const socket = new WebSocket("ws://localhost:8080/ws?token=" + token);
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, (frame) => {
+                console.log("Conectado:", frame);
+                stompClient.subscribe("/user/queue/pagos", (mensaje) => {
+                    const data = JSON.parse(mensaje.body);
+                    const texto = `💸 ${data.hora}|      ${data.mensaje} $${data.monto}     de ${data.email}`;
+                    mostrarMensaje(texto);
+
+                    if (sonidoHabilitado) {
+                        const sonido = document.getElementById("sonido-pago");
+                        sonido.currentTime = 0;
+                        sonido.play().catch(e => console.warn("🎧 Error al reproducir:", e));
+                    }
+                });
+            }, (error) => {
+                console.error("Error de conexión:", error);
+                setTimeout(() => conectarWebSocket(), 10000);
+            });
+
+            socket.onclose = () => {
+                console.warn("Desconectado. Reintentando...");
+                setTimeout(() => conectarWebSocket(), 10000);
+            };
+        }
+
+        function mostrarMensaje(texto) {
+            const mensajeDiv = document.createElement("div");
+            mensajeDiv.className = "mensaje-burbuja";
+            mensajeDiv.textContent = texto;
+            document.getElementById("mensajes").appendChild(mensajeDiv);
+            mensajeDiv.scrollIntoView({ behavior: "smooth", block: "end" });
+        }
+
+        function enviarMensaje() {
+            if (stompClient?.connected) {
+                stompClient.send("/app/chat", {}, JSON.stringify({
+                    texto: "Hola desde el frontend!",
+                    fecha: new Date()
+                }));
+            } else {
+                alert("⚠️ No estás conectado al servidor WebSocket.");
+            }
+        }
+
+        conectarWebSocket();
+    </script>
 </body>
 </html>
