@@ -38,7 +38,7 @@ public class SecurityConfig {
 
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req ->
-                req.requestMatchers("/auth/**","/oauth/callback", "/ws/**", "/webhook")
+                req.requestMatchers("/auth/**","/oauth/callback", "/ws/**", "/webhook", "/test")
                 .permitAll()
                 .anyRequest()
                 .authenticated()
