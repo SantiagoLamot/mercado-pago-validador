@@ -1,6 +1,9 @@
 package com.mpval.validador_backend.jwt.service;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.antlr.v4.runtime.misc.NotNull;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -8,13 +11,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.mpval.validador_backend.Usuario.entity.Usuario;
+import com.mpval.validador_backend.Usuario.repository.UsuarioRepository;
 import com.mpval.validador_backend.jwt.dto.AuthRequestDTO;
 import com.mpval.validador_backend.jwt.dto.TokenResponse;
 import com.mpval.validador_backend.jwt.dto.UsuarioRequestDTO;
 import com.mpval.validador_backend.jwt.entity.Token;
 import com.mpval.validador_backend.jwt.repository.TokenRepository;
-import com.mpval.validador_backend.Usuario.entity.Usuario;
-import com.mpval.validador_backend.Usuario.repository.UsuarioRepository;
+import com.mpval.validador_backend.mercado_pago.service.OauthTokenService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,7 +30,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtServicio;
     private final AuthenticationManager authenticationManager;
-    
+    private final OauthTokenService oauthTokenService;
+
     public TokenResponse register(final UsuarioRequestDTO request) {
         final Usuario user = Usuario.builder()
                 .nombreDeUsuario(request.getNombreDeUsuario())
@@ -40,23 +45,18 @@ public class AuthService {
         final String jwtToken = jwtServicio.generateToken(savedUser);
         final String refreshToken = jwtServicio.generateRefreshToken(savedUser);
         saveUserToken(savedUser, jwtToken);
-        return new TokenResponse(jwtToken, refreshToken,user.getNombreDeUsuario());
     }
 
     public TokenResponse authenticate(final AuthRequestDTO request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getNombreDeUsuario(),
-                        request.getContrasena()
-                )
-        );
         final Usuario user = usuarioRepositorio.findByNombreDeUsuario(request.getNombreDeUsuario())
                 .orElseThrow();
         final String accessToken = jwtServicio.generateToken(user);
         final String refreshToken = jwtServicio.generateRefreshToken(user);
         revokeAllUserTokens(user);
         saveUserToken(user, accessToken);
-        return new TokenResponse(accessToken, refreshToken, user.getNombreDeUsuario());
     }
 
     private void saveUserToken(Usuario user, String jwtToken) {
@@ -70,7 +70,6 @@ public class AuthService {
     }
 
     private void revokeAllUserTokens(final Usuario user) {
-        final List<Token> validUserTokens = tokenRepositorio.findByUsuarioIdAndExpiredFalseAndRevokedFalse(user.getId());
         if (!validUserTokens.isEmpty()) {
             validUserTokens.forEach(token -> {
                 token.setExpired(true);
@@ -97,6 +96,21 @@ public class AuthService {
         final String accessToken = jwtServicio.generateRefreshToken(user);
         revokeAllUserTokens(user);
         saveUserToken(user, accessToken);
-        return new TokenResponse(accessToken, refreshToken, user.getNombreDeUsuario());
+
+    private Map<String, Object> getEstadoUsuario(Usuario user) {
+        Map<String, Object> estado = new HashMap<>();
+
+        boolean oauth = oauthTokenService.AccessTokenValido(user);
+        boolean licencia = user.getExpiracionSuscripcion() != null &&
+                user.getExpiracionSuscripcion().isAfter(LocalDateTime.now());
+        String fechaExpiracion = user.getExpiracionSuscripcion() != null
+                ? user.getExpiracionSuscripcion().toString()
+                : null;
+
+        estado.put("oauth", oauth);
+        estado.put("licencia", licencia);
+        estado.put("fechaExpiracion", fechaExpiracion);
+
+        return estado;
     }
 }
