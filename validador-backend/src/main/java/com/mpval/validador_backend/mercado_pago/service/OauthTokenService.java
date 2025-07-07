@@ -16,13 +16,13 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import com.mpval.validador_backend.Usuario.entity.Usuario;
+import com.mpval.validador_backend.Usuario.service.UsuarioService;
 import com.mpval.validador_backend.jwt.service.JwtService;
 import com.mpval.validador_backend.mercado_pago.dto.OauthTokenRequestDTO;
 import com.mpval.validador_backend.mercado_pago.entity.OauthToken;
 import com.mpval.validador_backend.mercado_pago.repository.OauthTokenRepository;
 import com.mpval.validador_backend.mercado_pago.util.EncriptadoUtil;
-import com.mpval.validador_backend.Usuario.entity.Usuario;
-import com.mpval.validador_backend.Usuario.service.UsuarioService;
 
 @Service
 public class OauthTokenService {
@@ -32,9 +32,6 @@ public class OauthTokenService {
 
     @Value("${urlCallback}")
     String redirectUrl;
-
-    @Value("${urlWebhook}")
-    String urlWebhook;
 
     @Value("${clientSecret}")
     String clientSecret;
