@@ -45,18 +45,23 @@ public class AuthService {
         final String jwtToken = jwtServicio.generateToken(savedUser);
         final String refreshToken = jwtServicio.generateRefreshToken(savedUser);
         saveUserToken(savedUser, jwtToken);
+        return new TokenResponse(jwtToken, refreshToken, user.getNombreDeUsuario(), false, false, null);
     }
 
     public TokenResponse authenticate(final AuthRequestDTO request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getNombreDeUsuario(),
+                        request.getContrasena()));
         final Usuario user = usuarioRepositorio.findByNombreDeUsuario(request.getNombreDeUsuario())
                 .orElseThrow();
         final String accessToken = jwtServicio.generateToken(user);
         final String refreshToken = jwtServicio.generateRefreshToken(user);
         revokeAllUserTokens(user);
         saveUserToken(user, accessToken);
+        Map<String, Object> estado = getEstadoUsuario(user);
+        return new TokenResponse(accessToken, refreshToken, user.getNombreDeUsuario(), (Boolean)estado.get("oauth"), (Boolean)estado.get("licencia"),
+                (String)estado.get("fechaExpiracion"));
     }
 
     private void saveUserToken(Usuario user, String jwtToken) {
@@ -70,6 +75,8 @@ public class AuthService {
     }
 
     private void revokeAllUserTokens(final Usuario user) {
+        final List<Token> validUserTokens = tokenRepositorio
+                .findByUsuarioIdAndExpiredFalseAndRevokedFalse(user.getId());
         if (!validUserTokens.isEmpty()) {
             validUserTokens.forEach(token -> {
                 token.setExpired(true);
@@ -96,6 +103,10 @@ public class AuthService {
         final String accessToken = jwtServicio.generateRefreshToken(user);
         revokeAllUserTokens(user);
         saveUserToken(user, accessToken);
+        Map<String, Object> estado = getEstadoUsuario(user);
+        return new TokenResponse(accessToken, refreshToken, user.getNombreDeUsuario(), (Boolean)estado.get("oauth"), (Boolean)estado.get("licencia"),
+                (String)estado.get("fechaExpiracion"));
+    }
 
     private Map<String, Object> getEstadoUsuario(Usuario user) {
         Map<String, Object> estado = new HashMap<>();
