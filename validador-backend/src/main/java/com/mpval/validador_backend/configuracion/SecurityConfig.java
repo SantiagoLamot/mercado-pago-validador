@@ -81,6 +81,7 @@ public class SecurityConfig {
             tokenRepositorio.save(storedToken);
 
             SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_NO_CONTENT); //204 OK sin contenido
         }
     }
 }
