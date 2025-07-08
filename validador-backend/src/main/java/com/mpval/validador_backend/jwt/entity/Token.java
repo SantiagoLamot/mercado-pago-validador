@@ -26,6 +26,7 @@ public class Token {
     private Long id;
     
     private String token;
+    @Builder.Default
     private Token_Type tokenType = Token_Type.BEARER;
     private Boolean revoked;
     private Boolean expired;
