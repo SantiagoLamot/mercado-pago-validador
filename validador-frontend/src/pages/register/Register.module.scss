@@ -1,0 +1,22 @@
+$light-blue: #e6f2ff;
+$medium-blue: #66b2ff;
+$dark-blue: #0059b3;
+
+.registerContainer {
+  background-color: $light-blue;
+  padding: 2rem;
+  min-height: 100vh;
+
+  .title {
+    color: $dark-blue;
+  }
+
+  .btnBlue {
+    background-color: $medium-blue;
+    border: none;
+
+    &:hover {
+      background-color: $dark-blue;
+    }
+  }
+}
