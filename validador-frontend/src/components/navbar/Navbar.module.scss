@@ -1,0 +1,60 @@
+.customNavbar {
+  background-color: #343a40;
+  padding: 0.5rem 1rem;
+}
+
+.navbarBrand {
+  color: #fff;
+  font-weight: bold;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+.activeLink {
+  border: 2px solid #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.customBtn {
+  background-color: #0d6efd;
+  color: white;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #0b5ed7;
+    text-decoration: none;
+    color: white;
+  }
+}
+
+.logoutBtn {
+  background-color: #dc3545;
+
+  &:hover {
+    background-color: #bb2d3b;
+  }
+}
+
+.me2 {
+  margin-right: 0.5rem;
+}
+
+.username {
+  color: #fff;
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+}
