@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
@@ -26,7 +27,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
             WebSocketHandler wsHandler, Map<String, Object> attributes) {
 
         String uri = request.getURI().toString();
-        
+
         String token = null;
         if (uri.contains("token=")) {
             token = uri.substring(uri.indexOf("token=") + 6);
@@ -38,7 +39,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
         if (token != null) {
             try {
                 String username = jwtService.extractUsername(token);
-                
+
                 Usuario usuario = usuarioRepository.findByNombreDeUsuario(username)
                         .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
@@ -55,6 +56,6 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
-            WebSocketHandler wsHandler, Exception exception) {
+            WebSocketHandler wsHandler, @Nullable Exception exception) {
     }
 }
