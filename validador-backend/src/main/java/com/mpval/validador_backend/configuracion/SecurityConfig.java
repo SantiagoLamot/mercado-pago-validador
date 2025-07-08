@@ -37,12 +37,11 @@ public class SecurityConfig {
         http
 
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(req ->
-                req.requestMatchers("/auth/**","/oauth/callback", "/ws/**", "/webhook", "/test")
-                .permitAll()
-                .anyRequest()
-                .authenticated()
-                )
+                .authorizeHttpRequests(
+                        req -> req.requestMatchers("/auth/**", "/oauth/callback", "/ws/**", "/webhook", "/test")
+                                .permitAll()
+                                .anyRequest()
+                                .authenticated())
 
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
 
@@ -61,6 +60,10 @@ public class SecurityConfig {
     private void logout(
             final HttpServletRequest request, final HttpServletResponse response,
             final Authentication authentication) {
+        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED); // 405
+            return;
+        }
 
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
