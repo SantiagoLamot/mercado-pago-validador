@@ -140,22 +140,23 @@ public class OauthTokenService {
     
     public boolean AccessTokenValido(Usuario usuario) {
         try {
-        OauthToken token = oauthRepository.findByUsuarioId(usuario.getId())
-            .orElseThrow(()-> new RuntimeException("Ususario no posee token"));
-        String url = "https://api.mercadopago.com/users/me";
-        RestTemplate restTemplate = new RestTemplate();
+            OauthToken token = oauthRepository.findByUsuarioId(usuario.getId()).orElse(null);
+            if (token == null) {
+                return false;
+            }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token.getAccessToken());
+            String url = "https://api.mercadopago.com/users/me";
+            RestTemplate restTemplate = new RestTemplate();
 
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + token.getAccessToken());
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
             return response.getStatusCode().is2xxSuccessful();
-        } catch (HttpClientErrorException e) {
-            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED || e.getStatusCode() == HttpStatus.FORBIDDEN) {
-                return false;
-            }
+        }
+        catch (HttpClientErrorException e) {
             return false;
         }
     }
