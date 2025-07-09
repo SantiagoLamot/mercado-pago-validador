@@ -1,0 +1,6 @@
+.git
+.idea/
+*.iml
+*.md
+.dockerignore
+.env
