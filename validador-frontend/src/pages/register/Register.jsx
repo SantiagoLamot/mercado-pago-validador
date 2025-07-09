@@ -27,6 +27,8 @@ export default function Register() {
     try {
       const data = await registerUser(form);
 
+      sessionStorage.setItem('accessToken', data.accessToken);
+      sessionStorage.setItem('refreshToken', data.refreshToken);
       sessionStorage.setItem('username', data.userName);
 
       if (!data.licencia && !data.oauth) {
@@ -39,7 +41,7 @@ export default function Register() {
     } catch (err) {
       setError(
         'Error en el registro: ' +
-          (err.response?.data?.message || err.message)
+        (err.response?.data?.message || err.message)
       );
     }
   };
