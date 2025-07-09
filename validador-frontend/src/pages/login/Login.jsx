@@ -23,6 +23,8 @@ export default function Login() {
     try {
       const data = await loginUser(form);
 
+      sessionStorage.setItem('accessToken', data.accessToken);
+      sessionStorage.setItem('refreshToken', data.refreshToken);
       sessionStorage.setItem('username', data.userName);
 
       if (!data.licencia && !data.oauth) {
