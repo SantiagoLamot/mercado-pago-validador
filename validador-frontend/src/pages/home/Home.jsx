@@ -5,7 +5,7 @@ const Home = () => {
     <div className={styles.homeBackground}>
       <div className={styles.overlay}>
         <h1 className={styles.title}>Bienvenido al validador de Mercado Pago</h1>
-        <p className={styles.subtitle}>Asegurate de recibir tus pagos!</p>
+        <p className={styles.subtitle}>Asegurate de recibir tus transacciones!</p>
       </div>
     </div>
   );
