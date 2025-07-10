@@ -1,6 +1,9 @@
 package com.mpval.validador_backend.mercado_pago.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -16,35 +19,83 @@ import org.springframework.web.client.RestTemplate;
 
 import com.mercadopago.MercadoPagoConfig;
 import com.mercadopago.client.payment.PaymentClient;
+import com.mercadopago.client.preference.PreferenceClient;
+import com.mercadopago.client.preference.PreferenceItemRequest;
+import com.mercadopago.client.preference.PreferenceRequest;
+import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.exceptions.MPException;
 import com.mercadopago.resources.payment.Payment;
+import com.mercadopago.resources.preference.Preference;
+import com.mpval.validador_backend.Usuario.entity.Usuario;
+import com.mpval.validador_backend.Usuario.repository.UsuarioRepository;
+import com.mpval.validador_backend.jwt.service.JwtService;
 import com.mpval.validador_backend.mercado_pago.dto.OauthTokenRequestDTO;
 import com.mpval.validador_backend.mercado_pago.dto.WebhookDTO;
 import com.mpval.validador_backend.mercado_pago.entity.OauthToken;
+import com.mpval.validador_backend.mercado_pago.entity.Transaccion;
 import com.mpval.validador_backend.mercado_pago.repository.OauthTokenRepository;
-import com.mpval.validador_backend.Usuario.entity.Usuario;
-import com.mpval.validador_backend.Usuario.repository.UsuarioRepository;
+import com.mpval.validador_backend.mercado_pago.repository.TransaccionRepository;
 import com.mpval.validador_backend.webSocket.dto.PagoNotificacionDTO;
 import com.mpval.validador_backend.webSocket.service.NotificacionService;
 
 @Service
 public class MercadoPagoService {
 
-    @Value("${clientId}")
+    @Value("")
     String clientId;
 
-    @Value("${clientSecret}")
+    @Value("")
     String clientSecret;
+
+    @Value("${mercadopago.access-token}")
+    String accessToken;
 
     private final UsuarioRepository usuariosRepository;
     private final OauthTokenRepository oauthRepository;
     private final NotificacionService notificacionService;
-
-    public MercadoPagoService(UsuarioRepository u, OauthTokenRepository oa, NotificacionService n) {
+    private final JwtService jwtService;
+    private final TransaccionRepository transaccionRepository;
+    public MercadoPagoService(UsuarioRepository u, OauthTokenRepository oa, NotificacionService n, JwtService j, TransaccionRepository t) {
         this.usuariosRepository = u;
         this.oauthRepository = oa;
         this.notificacionService = n;
+        this.jwtService = j;
+        this.transaccionRepository = t;
     }
 
+    // ================ LINK PARA PAGAR SUSCRIP ================
+    public String pagarSuscripcioninit() throws MPException, MPApiException{
+        Transaccion nueva = new Transaccion();
+        Usuario usuario = usuariosRepository.findByNombreDeUsuario(jwtService.obtenerNombreDeUsuarioAutenticado())
+        .orElseThrow(()-> new RuntimeException("Error con usuario logueado"));
+        
+        nueva.setUsuario(usuario);
+        Transaccion transaccion = transaccionRepository.save(nueva);
+        
+        MercadoPagoConfig.setAccessToken(accessToken);
+
+        PreferenceItemRequest item = PreferenceItemRequest.builder()
+            .title("30 dias de suscipcion a MP Validador")
+            .quantity(1)
+            .currencyId("ARG")
+            .unitPrice(new BigDecimal(1L))
+            .build();
+        
+        OffsetDateTime ahora = OffsetDateTime.now();
+        OffsetDateTime expiracion = ahora.plusMinutes(2);
+
+        PreferenceRequest preferenceRequest = PreferenceRequest.builder()
+            .items(List.of(item))
+            .externalReference(transaccion.getId().toString())
+            .expires(true)
+            .expirationDateFrom(ahora)
+            .expirationDateTo(expiracion)
+            .build();
+        PreferenceClient client = new PreferenceClient();
+        Preference preference = client.create(preferenceRequest);
+        return preference.getInitPoint();
+    }
+    // ================ WEBHOOK ================
     public void procesarWebhook(WebhookDTO webhook) {
         if (!"payment".equalsIgnoreCase(webhook.getType())) {
             System.out.println("Webhook ignorado: tipo no soportado " + webhook.getType());
