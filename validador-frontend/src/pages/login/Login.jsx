@@ -23,9 +23,10 @@ export default function Login() {
     try {
       const data = await loginUser(form);
 
+      sessionStorage.setItem('username', data.userName);
       sessionStorage.setItem('accessToken', data.accessToken);
       sessionStorage.setItem('refreshToken', data.refreshToken);
-      sessionStorage.setItem('username', data.userName);
+      window.dispatchEvent(new Event('authChange'));
 
       if (!data.licencia && !data.oauth) {
         navigate('/suscripcion');
@@ -37,7 +38,7 @@ export default function Login() {
     } catch (err) {
       setError(
         'Error en el login: ' +
-          (err.response?.data?.message || err.message)
+        (err.response?.data?.message || err.message)
       );
     }
   };
