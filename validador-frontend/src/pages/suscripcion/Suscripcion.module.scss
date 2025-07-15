@@ -4,31 +4,47 @@ $dark-blue: #0059b3;
 
 .suscripcionContainer {
   background-color: $light-blue;
-  padding: 2rem;
+  padding: 4rem 2rem;
   min-height: 100vh;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 
   .title {
     color: $dark-blue;
-    margin-bottom: 1rem;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
   }
 
   .text {
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
+    font-size: 1.4rem;
+    line-height: 1.8;
+    max-width: 800px;
+    margin-bottom: 2rem;
+    color: #333;
+
+    .highlight {
+      color: $dark-blue;
+      font-weight: 600;
+    }
   }
 
   .btnBlue {
     background-color: $medium-blue;
     border: none;
     color: #fff;
-    padding: 0.5rem 1rem;
-    font-size: 1.1rem;
-    border-radius: 0.25rem;
-    transition: background-color 0.3s ease;
+    padding: 0.75rem 2rem;
+    font-size: 1.2rem;
+    font-weight: 500;
+    border-radius: 0.3rem;
+    transition: all 0.3s ease;
 
     &:hover {
       background-color: $dark-blue;
+      transform: scale(1.05);
     }
 
     &:disabled {
