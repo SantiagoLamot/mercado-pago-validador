@@ -3,7 +3,7 @@ $medium-blue: #66b2ff;
 $dark-blue: #0059b3;
 
 .suscripcionContainer {
-  background-color: $light-blue;
+  background: linear-gradient(135deg, #e6f2ff, #cce6ff);
   padding: 4rem 2rem;
   min-height: 100vh;
   text-align: center;
@@ -11,6 +11,12 @@ $dark-blue: #0059b3;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
+  .icon {
+    font-size: 5rem;
+    color: $dark-blue;
+    margin-bottom: 1rem;
+  }
 
   .title {
     color: $dark-blue;
