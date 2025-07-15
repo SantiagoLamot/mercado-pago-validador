@@ -12,5 +12,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MovimientoResponse {
-    private List<Movimiento> movimientos;    
+    private List<Movimiento> movimientos;
 }
