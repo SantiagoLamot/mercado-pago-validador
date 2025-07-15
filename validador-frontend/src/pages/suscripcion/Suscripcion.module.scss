@@ -1,0 +1,39 @@
+$light-blue: #e6f2ff;
+$medium-blue: #66b2ff;
+$dark-blue: #0059b3;
+
+.suscripcionContainer {
+  background-color: $light-blue;
+  padding: 2rem;
+  min-height: 100vh;
+  text-align: center;
+
+  .title {
+    color: $dark-blue;
+    margin-bottom: 1rem;
+  }
+
+  .text {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .btnBlue {
+    background-color: $medium-blue;
+    border: none;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    font-size: 1.1rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.3s ease;
+
+    &:hover {
+      background-color: $dark-blue;
+    }
+
+    &:disabled {
+      background-color: #9ecbf8;
+      cursor: not-allowed;
+    }
+  }
+}
