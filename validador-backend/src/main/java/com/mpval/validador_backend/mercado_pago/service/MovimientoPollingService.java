@@ -17,17 +17,21 @@ import com.mpval.validador_backend.mercado_pago.repository.OauthTokenRepository;
 
 @Service
 public class MovimientoPollingService {
-    
-    private final RestTemplate restTemplate;
 
-    public MovimientoPollingService(RestTemplate r){
+    private final RestTemplate restTemplate;
+    private final OauthTokenRepository oauthTokenRepository;
+
+    public MovimientoPollingService(RestTemplate r, OauthTokenRepository repo) {
         this.restTemplate = r;
         this.oauthTokenRepository = repo;
     }
 
+    @Scheduled(fixedRate = 5000)
     public void verificarMovimientos() {
+        List<OauthToken> tokens = oauthTokenRepository.findByAccessTokenIsNotNull();
         for (OauthToken token : tokens) {
             String userId = token.getUsuario().getId().toString();
+            String accessToken = token.getAccessToken();
             Long lastId = token.getLastMovementId();
             try {
                 HttpHeaders headers = new HttpHeaders();
@@ -52,6 +56,8 @@ public class MovimientoPollingService {
                         System.out.printf("[NOTIFICACIÓN] Usuario %s recibió $%.2f - %s\n",
                                 userId, movimiento.getAmount(), movimiento.getDetail());
 
+                        token.setLastMovementId(movimiento.getId());
+                        oauthTokenRepository.save(token);
                     }
                 }
             } catch (Exception e) {
