@@ -31,6 +31,7 @@ public class OauthToken {
     private Long userId;
     private LocalDateTime expiresAt;
     private Boolean liveMode;
+    private Long lastMovementId;
     
     @OneToOne
     @JoinColumn(name = "usuario_id", nullable = false)
