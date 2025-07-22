@@ -4,3 +4,12 @@
 *.md
 .dockerignore
 .env
+#mvn clean package -DskipTeststarget/
+node_modules/
+.git/
+.idea/
+*.iml
+*.log
+*.md
+*.bak
+
