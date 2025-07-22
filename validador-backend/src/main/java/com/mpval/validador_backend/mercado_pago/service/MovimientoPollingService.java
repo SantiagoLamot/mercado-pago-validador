@@ -28,6 +28,7 @@ public class MovimientoPollingService {
 
     @Scheduled(fixedRate = 5000)
     public void verificarMovimientos() {
+        System.out.println("<<<ENTRA A VERIFICAR MOVIMIENTOS>>>");
         List<OauthToken> tokens = oauthTokenRepository.findByAccessTokenIsNotNull();
         for (OauthToken token : tokens) {
             String userId = token.getUsuario().getId().toString();
