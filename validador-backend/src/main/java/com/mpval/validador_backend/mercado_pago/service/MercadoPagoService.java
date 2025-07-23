@@ -113,24 +113,31 @@ public class MercadoPagoService {
             // Obtengo el estado de la transaccion
             String estado = payment.getStatus();
 
-            Usuario usuario = usuariosRepository.getById(oauthToken.getUsuario().getId());
+            // Obtengo el ID del la transaccion y luego la transaccion completa
+            String externalReference = payment.getExternalReference();
+            Long transactionId = Long.parseLong(externalReference);
+            Transaccion transaccion = transaccionRepository.findById(transactionId)
+                    .orElseThrow(() -> new RuntimeException("Transacción no encontrada: ID " + transactionId));
+
+            Usuario usuario = usuariosRepository.getById(transaccion.getUsuario().getId());
             // Se verifica que se encontro el id del usuario en la Transaccion
             if (usuario == null) {
-                System.out.println("No se encontró el usuario vendedor en BD local");
-                return;
+                throw new RuntimeException("No se pudo encontrar usuario por ID de Transaccion");
             }
 
             // se setean los estados en caso que pase las validaciones
             if ("approved".equalsIgnoreCase(estado)) {
-                // Crear DTO de notificación con datos del pago
-                PagoNotificacionDTO dto = PagoNotificacionDTO.builder()
-                        .mensaje("Recibiste un nuevo pago")
-                        .monto(payment.getTransactionAmount().doubleValue())
-                        .email(payment.getPayer().getEmail())
-                        .hora(LocalDateTime.now())
-                        .build();
+                //Se setea y guarda la fecha de expiracion en 30 dias post a la fecha
+                usuario.setExpiracionSuscripcion(LocalDateTime.now().plusDays(30L));
+                usuariosRepository.save(usuario);
+                
+                EstadoUsuarioDTO estadoUsuarioDTO = EstadoUsuarioDTO.builder()
+                    .userName(usuario.getNombreDeUsuario())
+                    .licencia(true)
+                    .vencimientoLicencia(usuario.getExpiracionSuscripcion().toString())
+                    .build();
                 // Notificar al usuario logueado en WebSocket
-                notificacionService.notificarPagoAUsuario(usuario.getNombreDeUsuario(), dto);
+                notificacionService.notificarFechaSuscripcionAUsuario(usuario.getNombreDeUsuario(), estadoUsuarioDTO);
             }
         } catch (Exception e) {
             System.out.println("Error al procesar webhook: " + e.getMessage());
