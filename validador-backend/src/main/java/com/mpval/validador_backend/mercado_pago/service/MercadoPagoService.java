@@ -29,13 +29,11 @@ import com.mercadopago.resources.preference.Preference;
 import com.mpval.validador_backend.Usuario.entity.Usuario;
 import com.mpval.validador_backend.Usuario.repository.UsuarioRepository;
 import com.mpval.validador_backend.jwt.service.JwtService;
+import com.mpval.validador_backend.mercado_pago.dto.EstadoUsuarioDTO;
 import com.mpval.validador_backend.mercado_pago.dto.OauthTokenRequestDTO;
 import com.mpval.validador_backend.mercado_pago.dto.WebhookDTO;
-import com.mpval.validador_backend.mercado_pago.entity.OauthToken;
 import com.mpval.validador_backend.mercado_pago.entity.Transaccion;
-import com.mpval.validador_backend.mercado_pago.repository.OauthTokenRepository;
 import com.mpval.validador_backend.mercado_pago.repository.TransaccionRepository;
-import com.mpval.validador_backend.webSocket.dto.PagoNotificacionDTO;
 import com.mpval.validador_backend.webSocket.service.NotificacionService;
 
 @Service
@@ -51,13 +49,11 @@ public class MercadoPagoService {
     String accessToken;
 
     private final UsuarioRepository usuariosRepository;
-    private final OauthTokenRepository oauthRepository;
     private final NotificacionService notificacionService;
     private final JwtService jwtService;
     private final TransaccionRepository transaccionRepository;
-    public MercadoPagoService(UsuarioRepository u, OauthTokenRepository oa, NotificacionService n, JwtService j, TransaccionRepository t) {
+    public MercadoPagoService(UsuarioRepository u, NotificacionService n, JwtService j, TransaccionRepository t) {
         this.usuariosRepository = u;
-        this.oauthRepository = oa;
         this.notificacionService = n;
         this.jwtService = j;
         this.transaccionRepository = t;
@@ -101,18 +97,12 @@ public class MercadoPagoService {
             System.out.println("Webhook ignorado: tipo no soportado " + webhook.getType());
             return;
         }
-
         try {
-            // Se obtiene el id del usuario de la app mediante el id de mp
-            Long idMp = webhook.getUser_id();
-            OauthToken oauthToken = oauthRepository.findByUserId(idMp)
-                    .orElseThrow(() -> new RuntimeException("Error al obtener id del usuario de MP"));
-
+            
             // Obtengo el ID de pago
             Long paymentId = webhook.getData().getId();
 
             // Con el id obtenido busco el pago
-            MercadoPagoConfig.setAccessToken(oauthToken.getAccessToken());
             PaymentClient client = new PaymentClient();
             Payment payment = client.get(paymentId);
 
