@@ -59,6 +59,7 @@ public class MovimientoPollingService {
         List<OauthToken> oauthTokens = usuariosConSuscripcionActiva.stream()
                 .map(usuario -> oauthTokenRepository.findByUsuario(usuario))
                 .filter(Objects::nonNull)
+                .flatMap(List::stream)
                 .collect(Collectors.toList());
 
         for (OauthToken token : oauthTokens) {
