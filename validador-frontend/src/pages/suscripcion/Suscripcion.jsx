@@ -13,7 +13,7 @@ export default function Suscripcion() {
     setError('');
     setLoading(true);
     try {
-      const link = await iniciarPagoSuscripcion('param-ejemplo');
+      const link = await iniciarPagoSuscripcion();
       window.location.href = link;
     } catch (err) {
       setError(

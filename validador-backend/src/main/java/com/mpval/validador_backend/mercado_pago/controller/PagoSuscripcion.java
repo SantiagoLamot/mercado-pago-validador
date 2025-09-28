@@ -17,8 +17,9 @@ public class PagoSuscripcion {
     }
 
     @GetMapping("/pago/suscripcion")
-    public ResponseEntity<String> iniciarPagoSuscripcion(@RequestParam String param) {
+    public ResponseEntity<String> iniciarPagoSuscripcion() {
         try{
+            System.out.println("Entra al pago de suscripcion");
             String url = mercadoPagoService.pagarSuscripcioninit();
             return ResponseEntity.ok(url);
         }

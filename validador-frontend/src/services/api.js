@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://generous-evenly-skylark.ngrok-free.app/', 
+  baseURL: 'http://localhost:8080', //http://localhost:8080       https://generous-evenly-skylark.ngrok-free.app
   headers: {
     'Content-Type': 'application/json',
   },
@@ -17,3 +17,4 @@ api.interceptors.request.use((config) => {
 });
 
 export default api;
+  

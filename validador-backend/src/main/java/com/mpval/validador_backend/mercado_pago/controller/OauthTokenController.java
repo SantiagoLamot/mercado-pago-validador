@@ -22,8 +22,9 @@ public class OauthTokenController {
     }
 
     @GetMapping("/init")
-    public ResponseEntity<String> init(@RequestBody String entity) {
+    public ResponseEntity<String> init() {
         try{
+            System.out.println(oauthTokenService.UrlAutorizacion());
             return ResponseEntity.ok(oauthTokenService.UrlAutorizacion());
         }
         catch(Exception e){

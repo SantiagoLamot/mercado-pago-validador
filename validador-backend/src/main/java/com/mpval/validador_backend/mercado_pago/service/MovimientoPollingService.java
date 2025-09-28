@@ -93,6 +93,7 @@ public class MovimientoPollingService {
                                 .monto(movimiento.getAmount().doubleValue())
                                 .hora(LocalDateTime.now())
                                 .build();
+                        System.out.println("Se recibio un pago: "+dto.toString());
                         notificacionService.notificarPagoAUsuario(usuario.getNombreDeUsuario(), dto);
                         token.setLastMovementId(movimiento.getId());
                         oauthTokenRepository.save(token);

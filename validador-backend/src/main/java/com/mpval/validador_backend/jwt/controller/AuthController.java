@@ -41,6 +41,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> authenticate(@RequestBody AuthRequestDTO request) {
         try {
+            System.out.println("entra al login");
             TokenResponse response = service.authenticate(request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {

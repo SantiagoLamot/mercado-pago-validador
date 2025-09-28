@@ -62,17 +62,17 @@ public class AppConfig {
         return new RestTemplate();
     }
 
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/auth/logout") // para permitor todos "/**"
-                        .allowedOrigins("http://localhost:5173")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(true); // para uso de cookies o tokens
-            }
-        };
-    }
+    // @Bean
+    // public WebMvcConfigurer corsConfigurer() {
+    //     return new WebMvcConfigurer() {
+    //         @Override
+    //         public void addCorsMappings(CorsRegistry registry) {
+    //             registry.addMapping("/auth/logout") // para permitor todos "/**"
+    //                     .allowedOrigins("http://localhost:5173", "https://generous-evenly-skylark.ngrok-free.app")
+    //                     .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+    //                     .allowedHeaders("*")
+    //                     .allowCredentials(true); // para uso de cookies o tokens
+    //         }
+    //     };
+    // }
 }
