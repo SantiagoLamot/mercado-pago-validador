@@ -44,7 +44,6 @@ public class MovimientoPollingService {
 
     @Scheduled(fixedRate = 5000)
     public void verificarMovimientos() {
-        System.out.println("<<<ENTRA A VERIFICAR MOVIMIENTOS>>>");
         List<Token> TokensValidos = tokenRepository.findByRevokedFalseAndExpiredFalse();
 
         LocalDateTime now = LocalDateTime.now();
