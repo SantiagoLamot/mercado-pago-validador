@@ -32,27 +32,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @EnableMethodSecurity
 public class SecurityConfig {
-
+    
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
     private final TokenRepository tokenRepositorio;
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "https://generous-evenly-skylark.ngrok-free.app"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "*"));
-        configuration.setExposedHeaders(List.of("Authorization"));
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-
+    
     @Bean
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
         http
@@ -64,46 +48,62 @@ public class SecurityConfig {
                                         "/pago/**")
                                 .permitAll()
                                 .anyRequest().authenticated())
-
+    
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
-
+    
                 .authenticationProvider(authenticationProvider)
-
+    
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-
+    
                 .logout(logout -> logout.logoutUrl("/auth/logout")
                         .addLogoutHandler(this::logout)
                         .logoutSuccessHandler(
                                 (request, response, authentication) -> SecurityContextHolder.clearContext()));
-
+    
         return http.build();
     }
-
+    
     private void logout(
-            final HttpServletRequest request, final HttpServletResponse response,
-            final Authentication authentication) {
-        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+        final HttpServletRequest request, final HttpServletResponse response,
+        final Authentication authentication) {
+            if (!"POST".equalsIgnoreCase(request.getMethod())) {
             response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED); // 405
             return;
         }
-
+        
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return;
         }
-
+        
         final String jwt = authHeader.substring(7);
-
+        
         final Token storedToken = tokenRepositorio.findByToken(jwt).orElse(null);
-
+        
         if (storedToken != null) {
-
+            
             storedToken.setExpired(true);
             storedToken.setRevoked(true);
             tokenRepositorio.save(storedToken);
-
+            
             SecurityContextHolder.clearContext();
             response.setStatus(HttpServletResponse.SC_NO_CONTENT); // 204 OK sin contenido
         }
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "https://generous-evenly-skylark.ngrok-free.app"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "*"));
+        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowCredentials(true);
+    
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
