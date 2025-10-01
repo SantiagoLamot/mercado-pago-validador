@@ -7,7 +7,7 @@ import { Login } from '../components/Login';
 import { Register } from '../components/Register';
 import { Suscripcion } from '../components/Suscripcion';
 import { Oauth } from '../components/Oauth';
-import { Notificaciones } from '../components/Notificaciones';
+import  Notificaciones  from '../components/Notificaciones';
 
 export const router = createBrowserRouter([
     {
