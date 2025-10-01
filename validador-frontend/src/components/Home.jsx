@@ -10,10 +10,12 @@ export const Home = () => {
   }, []);
 
   return (
-    <div className={styles.homeBackground}>
-      <div className={styles.overlay}>
-        <h1 className={styles.title}>Bienvenido {username} al validador de MP</h1>
-        <p className={styles.subtitle}>Asegurate de recibir tus transacciones!.</p>
+    <div className={styles.Container}>
+      <div className={styles.homeBackground}>
+        <div className={styles.overlay}>
+          <h1 className={styles.title}>Bienvenido {username} al validador de MP</h1>
+          <p className={styles.subtitle}>Asegurate de recibir tus transacciones!.</p>
+        </div>
       </div>
     </div>
   );
