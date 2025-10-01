@@ -17,8 +17,8 @@ export function AuthProvider({ children }) {
             username: sessionStorage.getItem('username') || '',
             accessToken: sessionStorage.getItem('accessToken') || '',
             refreshToken: sessionStorage.getItem('refreshToken') || '',
-            licencia: sessionStorage.getItem('licencia') === 'true',
-            oauth: sessionStorage.getItem('oauth') === 'true',
+            licencia: true,//sessionStorage.getItem('licencia') === 'true',
+            oauth: true,//sessionStorage.getItem('oauth') === 'true',
             vencimientoLicencia: sessionStorage.getItem('vencimientoLicencia') || '',
         };
         setAuth(stored);
@@ -30,8 +30,8 @@ export function AuthProvider({ children }) {
                 username: sessionStorage.getItem('username') || '',
                 accessToken: sessionStorage.getItem('accessToken') || '',
                 refreshToken: sessionStorage.getItem('refreshToken') || '',
-                licencia: sessionStorage.getItem('licencia') === 'true',
-                oauth: sessionStorage.getItem('oauth') === 'true',
+                licencia: true,//sessionStorage.getItem('licencia') === 'true',
+                oauth: true,//sessionStorage.getItem('oauth') === 'true',
                 vencimientoLicencia: sessionStorage.getItem('vencimientoLicencia') || '',
             };
             setAuth(updated);
