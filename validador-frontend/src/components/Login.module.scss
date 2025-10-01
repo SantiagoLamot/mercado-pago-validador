@@ -5,7 +5,7 @@ $dark-blue: #0059b3;
 .loginContainer {
   background-color: $light-blue;
   padding: 2rem;
-  min-height: 100vh;
+  min-height: calc(100vh - 40px);
 
   .title {
     color: $dark-blue;
