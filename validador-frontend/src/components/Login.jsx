@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginUser } from '../../services/authService';
+import { loginUser } from '../services/authService';
 import styles from './Login.module.scss';
 
-export default function Login() {
+export const Login = () => {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -26,6 +26,9 @@ export default function Login() {
       sessionStorage.setItem('username', data.userName);
       sessionStorage.setItem('accessToken', data.accessToken);
       sessionStorage.setItem('refreshToken', data.refreshToken);
+      sessionStorage.setItem('vencimientoLicencia', data.vencimientoLicencia || '');
+      sessionStorage.setItem('licencia', String(data.licencia));
+      sessionStorage.setItem('oauth', String(data.oauth));
       window.dispatchEvent(new Event('authChange'));
 
       if (!data.licencia && !data.oauth) {

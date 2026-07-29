@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://generous-evenly-skylark.ngrok-free.app/', 
+  baseURL: 'https://generous-evenly-skylark.ngrok-free.app', //http://localhost:8080       https://generous-evenly-skylark.ngrok-free.app      https://all-cycles-stay.loca.lt'
   headers: {
+    'ngrok-skip-browser-warning': 'true',
     'Content-Type': 'application/json',
   },
 });

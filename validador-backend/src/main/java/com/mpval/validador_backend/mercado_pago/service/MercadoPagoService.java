@@ -39,10 +39,10 @@ import com.mpval.validador_backend.webSocket.service.NotificacionService;
 @Service
 public class MercadoPagoService {
 
-    @Value("")
+    @Value("${clientId}")
     String clientId;
 
-    @Value("")
+    @Value("${clientSecret}")
     String clientSecret;
 
     @Value("${mercadopago.access-token}")
@@ -61,34 +61,40 @@ public class MercadoPagoService {
 
     // ================ LINK PARA PAGAR SUSCRIP ================
     public String pagarSuscripcioninit() throws MPException, MPApiException{
+        System.err.println("LLEGA ACA!");
         Transaccion nueva = new Transaccion();
         Usuario usuario = usuariosRepository.findByNombreDeUsuario(jwtService.obtenerNombreDeUsuarioAutenticado())
         .orElseThrow(()-> new RuntimeException("Error con usuario logueado"));
-        
+        System.out.println("paso 1");
         nueva.setUsuario(usuario);
         Transaccion transaccion = transaccionRepository.save(nueva);
         
         MercadoPagoConfig.setAccessToken(accessToken);
-
+        
+        System.out.println("paso 2");
         PreferenceItemRequest item = PreferenceItemRequest.builder()
-            .title("30 dias de suscipcion a MP Validador")
-            .quantity(1)
-            .currencyId("ARG")
-            .unitPrice(new BigDecimal(1L))
-            .build();
+        .title("30 dias de suscipcion a MP Validador")
+        .quantity(1)
+        .currencyId("ARG")
+        .unitPrice(new BigDecimal(1L))
+        .build();
         
         OffsetDateTime ahora = OffsetDateTime.now();
         OffsetDateTime expiracion = ahora.plusMinutes(2);
-
+        
+        System.out.println("paso 3");
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
-            .items(List.of(item))
-            .externalReference(transaccion.getId().toString())
-            .expires(true)
-            .expirationDateFrom(ahora)
-            .expirationDateTo(expiracion)
-            .build();
+        .items(List.of(item))
+        .externalReference(transaccion.getId().toString())
+        .expires(true)
+        .expirationDateFrom(ahora)
+        .expirationDateTo(expiracion)
+        .build();
         PreferenceClient client = new PreferenceClient();
         Preference preference = client.create(preferenceRequest);
+        System.out.println("paso 5");
+        System.out.println(preference.getInitPoint());
+
         return preference.getInitPoint();
     }
     // ================ WEBHOOK ================

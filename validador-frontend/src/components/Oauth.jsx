@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { iniciarOauth } from '../../services/mpService';
+import { iniciarOauth} from '../services/mpService'
 import styles from './Oauth.module.scss';
 import { motion } from 'framer-motion';
 import { FaLock } from 'react-icons/fa';
 
-export default function Oauth() {
+export const  Oauth = () => {
   const username = sessionStorage.getItem('username');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

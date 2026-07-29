@@ -1,7 +1,7 @@
 import api from './api';
 
-export const iniciarPagoSuscripcion = async (param) => {
-  const response = await api.get(`/pago/suscripcion?param=${encodeURIComponent(param)}`);
+export const iniciarPagoSuscripcion = async () => {
+  const response = await api.get('/pago/suscripcion');
   return response.data; // devuelve el link de pago
 };
 

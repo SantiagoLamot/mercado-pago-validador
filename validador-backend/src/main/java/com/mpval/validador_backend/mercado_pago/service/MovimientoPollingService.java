@@ -44,7 +44,6 @@ public class MovimientoPollingService {
 
     @Scheduled(fixedRate = 5000)
     public void verificarMovimientos() {
-        System.out.println("<<<ENTRA A VERIFICAR MOVIMIENTOS>>>");
         List<Token> TokensValidos = tokenRepository.findByRevokedFalseAndExpiredFalse();
 
         LocalDateTime now = LocalDateTime.now();
@@ -93,6 +92,7 @@ public class MovimientoPollingService {
                                 .monto(movimiento.getAmount().doubleValue())
                                 .hora(LocalDateTime.now())
                                 .build();
+                        System.out.println("Se recibio un pago: "+dto.toString());
                         notificacionService.notificarPagoAUsuario(usuario.getNombreDeUsuario(), dto);
                         token.setLastMovementId(movimiento.getId());
                         oauthTokenRepository.save(token);

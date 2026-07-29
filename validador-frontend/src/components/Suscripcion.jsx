@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { iniciarPagoSuscripcion } from '../../services/mpService';
+import { iniciarPagoSuscripcion } from '../services/mpService';
 import styles from './Suscripcion.module.scss';
 import { motion } from 'framer-motion';
 import { FaRegCreditCard } from 'react-icons/fa';
 
-export default function Suscripcion() {
+export const Suscripcion = () => {
   const username = sessionStorage.getItem('username');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,7 +13,7 @@ export default function Suscripcion() {
     setError('');
     setLoading(true);
     try {
-      const link = await iniciarPagoSuscripcion('param-ejemplo');
+      const link = await iniciarPagoSuscripcion();
       window.location.href = link;
     } catch (err) {
       setError(

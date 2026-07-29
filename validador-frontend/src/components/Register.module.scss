@@ -2,10 +2,10 @@ $light-blue: #e6f2ff;
 $medium-blue: #66b2ff;
 $dark-blue: #0059b3;
 
-.loginContainer {
+.Container {
   background-color: $light-blue;
   padding: 2rem;
-  min-height: 100vh;
+  min-height: calc(100vh - 40px);
 
   .title {
     color: $dark-blue;

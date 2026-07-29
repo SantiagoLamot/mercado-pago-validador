@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { registerUser } from '../../services/authService';
+import { registerUser } from '../services/authService';
 import styles from './Register.module.scss';
 
-export default function Register() {
+export const  Register= ()=> {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
