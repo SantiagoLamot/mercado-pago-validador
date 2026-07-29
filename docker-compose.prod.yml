@@ -1,0 +1,75 @@
+# ============================================================
+# mp-validador — Compose de producción
+# Se conecta a la red externa tapalqueapp_tapalque-net (creada por el
+# proyecto tapalqueapp) SOLO desde el frontend, que es el único servicio
+# que el nginx-proxy compartido del VPS necesita ver.
+#
+# Levantar siempre con:
+#   docker compose -f docker-compose.prod.yml -p mp-validador up -d --build
+# ============================================================
+
+services:
+  mysql-db:
+    image: mysql:8
+    container_name: mp-validador-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - mp-validador-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mp-validador-net
+
+  validador-backend:
+    build:
+      context: ./validador-backend
+      target: production
+    container_name: mp-validador-backend
+    restart: always
+    env_file:
+      - ./validador-backend/.env
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    networks:
+      - mp-validador-net
+
+  mp-validador-frontend:
+    build:
+      context: ./validador-frontend
+      target: production
+    container_name: mp-validador-frontend
+    restart: always
+    depends_on:
+      validador-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mp-validador-net
+      - tapalque-net
+
+networks:
+  mp-validador-net:
+    driver: bridge
+  tapalque-net:
+    external: true
+    name: tapalqueapp_tapalque-net
+
+volumes:
+  mp-validador-mysql-data:

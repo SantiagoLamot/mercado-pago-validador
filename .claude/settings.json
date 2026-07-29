@@ -43,7 +43,8 @@
       "Bash(MSYS_NO_PATHCONV=1 docker exec validador-app-dev ps aux)",
       "Bash(MSYS_NO_PATHCONV=1 docker exec validador-app-dev sh -c \"grep -n 'PATCH' /app/src/main/java/com/mpval/validador_backend/configuracion/SecurityConfig.java; grep -n 'reset-password' /app/src/main/java/com/mpval/validador_backend/admin/controller/AdminController.java\")",
       "Bash(MSYS_NO_PATHCONV=1 docker exec validador-app-dev sh -c \"date; ls -la /app/target/classes/com/mpval/validador_backend/configuracion/SecurityConfig.class /app/target/classes/com/mpval/validador_backend/admin/controller/AdminController.class\")",
-      "Bash(curl -s http://localhost:8080/test)"
+      "Bash(curl -s http://localhost:8080/test)",
+      "Bash(git -C \"/c/Users/santi/Documents/GitHub/mercado-pago-validador\" ls-files)"
     ]
   }
 }
