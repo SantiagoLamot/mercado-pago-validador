@@ -1,0 +1,21 @@
+@use '../../../styles/tokens' as tokens;
+
+.alert {
+  padding: tokens.$space-3 tokens.$space-4;
+  border-radius: tokens.$radius-sm;
+  font-size: tokens.$font-size-sm;
+  margin-bottom: tokens.$space-4;
+  border: 1px solid transparent;
+}
+
+.error {
+  background-color: rgba(220, 53, 69, 0.08);
+  border-color: rgba(220, 53, 69, 0.3);
+  color: #a3202f;
+}
+
+.info {
+  background-color: tokens.$glow-accent;
+  border-color: rgba(63, 140, 243, 0.3);
+  color: tokens.$dark-blue;
+}

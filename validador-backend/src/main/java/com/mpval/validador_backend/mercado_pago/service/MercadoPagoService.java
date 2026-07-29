@@ -6,37 +6,42 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
 import com.mercadopago.MercadoPagoConfig;
 import com.mercadopago.client.payment.PaymentClient;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
+import com.mercadopago.core.MPRequestOptions;
 import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.exceptions.MPException;
 import com.mercadopago.resources.payment.Payment;
 import com.mercadopago.resources.preference.Preference;
 import com.mpval.validador_backend.Usuario.entity.Usuario;
 import com.mpval.validador_backend.Usuario.repository.UsuarioRepository;
+import com.mpval.validador_backend.admin.entity.OrigenMovimientoSuscripcion;
+import com.mpval.validador_backend.admin.entity.SuscripcionMovimiento;
+import com.mpval.validador_backend.admin.repository.SuscripcionMovimientoRepository;
 import com.mpval.validador_backend.jwt.service.JwtService;
 import com.mpval.validador_backend.mercado_pago.dto.EstadoUsuarioDTO;
-import com.mpval.validador_backend.mercado_pago.dto.OauthTokenRequestDTO;
 import com.mpval.validador_backend.mercado_pago.dto.WebhookDTO;
+import com.mpval.validador_backend.mercado_pago.entity.ConfiguracionSuscripcion;
+import com.mpval.validador_backend.mercado_pago.entity.OauthToken;
 import com.mpval.validador_backend.mercado_pago.entity.Transaccion;
+import com.mpval.validador_backend.mercado_pago.repository.ConfiguracionSuscripcionRepository;
+import com.mpval.validador_backend.mercado_pago.repository.OauthTokenRepository;
 import com.mpval.validador_backend.mercado_pago.repository.TransaccionRepository;
+import com.mpval.validador_backend.mercado_pago.util.EncriptadoUtil;
 import com.mpval.validador_backend.webSocket.service.NotificacionService;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class MercadoPagoService {
 
     @Value("${clientId}")
@@ -52,37 +57,36 @@ public class MercadoPagoService {
     private final NotificacionService notificacionService;
     private final JwtService jwtService;
     private final TransaccionRepository transaccionRepository;
-    public MercadoPagoService(UsuarioRepository u, NotificacionService n, JwtService j, TransaccionRepository t) {
-        this.usuariosRepository = u;
-        this.notificacionService = n;
-        this.jwtService = j;
-        this.transaccionRepository = t;
-    }
+    private final OauthTokenRepository oauthTokenRepository;
+    private final PagoDetectadoService pagoDetectadoService;
+    private final ConfiguracionSuscripcionRepository configuracionSuscripcionRepository;
+    private final EncriptadoUtil encriptadoUtil;
+    private final SuscripcionMovimientoRepository suscripcionMovimientoRepository;
 
     // ================ LINK PARA PAGAR SUSCRIP ================
     public String pagarSuscripcioninit() throws MPException, MPApiException{
-        System.err.println("LLEGA ACA!");
         Transaccion nueva = new Transaccion();
         Usuario usuario = usuariosRepository.findByNombreDeUsuario(jwtService.obtenerNombreDeUsuarioAutenticado())
         .orElseThrow(()-> new RuntimeException("Error con usuario logueado"));
-        System.out.println("paso 1");
         nueva.setUsuario(usuario);
         Transaccion transaccion = transaccionRepository.save(nueva);
-        
+
         MercadoPagoConfig.setAccessToken(accessToken);
-        
-        System.out.println("paso 2");
+
+        BigDecimal precioMensual = configuracionSuscripcionRepository.findById(1L)
+                .map(ConfiguracionSuscripcion::getPrecioMensual)
+                .orElse(BigDecimal.valueOf(5000));
+
         PreferenceItemRequest item = PreferenceItemRequest.builder()
-        .title("30 dias de suscipcion a MP Validador")
+        .title("30 dias de suscripcion a MP Validador")
         .quantity(1)
         .currencyId("ARG")
-        .unitPrice(new BigDecimal(1L))
+        .unitPrice(precioMensual)
         .build();
-        
+
         OffsetDateTime ahora = OffsetDateTime.now();
-        OffsetDateTime expiracion = ahora.plusMinutes(2);
-        
-        System.out.println("paso 3");
+        OffsetDateTime expiracion = ahora.plusMinutes(60);
+
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
         .items(List.of(item))
         .externalReference(transaccion.getId().toString())
@@ -92,90 +96,85 @@ public class MercadoPagoService {
         .build();
         PreferenceClient client = new PreferenceClient();
         Preference preference = client.create(preferenceRequest);
-        System.out.println("paso 5");
-        System.out.println(preference.getInitPoint());
+        log.info("Preferencia de suscripcion creada para {}: {}", usuario.getNombreDeUsuario(), preference.getId());
 
         return preference.getInitPoint();
     }
+
     // ================ WEBHOOK ================
+    @Async
+    public void procesarWebhookAsync(WebhookDTO webhook) {
+        procesarWebhook(webhook);
+    }
+
     public void procesarWebhook(WebhookDTO webhook) {
         if (!"payment".equalsIgnoreCase(webhook.getType())) {
-            System.out.println("Webhook ignorado: tipo no soportado " + webhook.getType());
+            log.debug("Webhook ignorado: tipo no soportado {}", webhook.getType());
             return;
         }
         try {
-            
-            // Obtengo el ID de pago
             Long paymentId = webhook.getData().getId();
 
-            // Con el id obtenido busco el pago
+            // Si el user_id del webhook matchea una cuenta MP conectada, es un pago
+            // recibido por un negocio (checkout/QR/link/Point o transferencia directa) -
+            // hay que consultarlo con el access_token de ESA cuenta, no con el de la app.
+            OauthToken cuentaConectada = webhook.getUser_id() != null
+                    ? oauthTokenRepository.findByUserId(webhook.getUser_id()).orElse(null)
+                    : null;
+
             PaymentClient client = new PaymentClient();
-            Payment payment = client.get(paymentId);
+            Payment payment = cuentaConectada != null
+                    ? client.get(paymentId, MPRequestOptions.builder()
+                            .accessToken(encriptadoUtil.desencriptar(cuentaConectada.getAccessToken()))
+                            .build())
+                    : client.get(paymentId);
 
             if (payment == null) {
                 throw new RuntimeException("el payment es nulo");
             }
 
-            // Obtengo el estado de la transaccion
-            String estado = payment.getStatus();
+            if (cuentaConectada != null) {
+                pagoDetectadoService.manejarPagoDetectado(cuentaConectada, payment, "webhook");
+                return;
+            }
 
-            // Obtengo el ID del la transaccion y luego la transaccion completa
+            // Si no, es el pago de la suscripcion propia del SaaS (via externalReference -> Transaccion)
+            String estado = payment.getStatus();
             String externalReference = payment.getExternalReference();
             Long transactionId = Long.parseLong(externalReference);
             Transaccion transaccion = transaccionRepository.findById(transactionId)
                     .orElseThrow(() -> new RuntimeException("Transacción no encontrada: ID " + transactionId));
 
-            Usuario usuario = usuariosRepository.getById(transaccion.getUsuario().getId());
-            // Se verifica que se encontro el id del usuario en la Transaccion
-            if (usuario == null) {
-                throw new RuntimeException("No se pudo encontrar usuario por ID de Transaccion");
-            }
+            Usuario usuario = usuariosRepository.findById(transaccion.getUsuario().getId())
+                    .orElseThrow(() -> new RuntimeException("No se pudo encontrar usuario por ID de Transaccion"));
 
-            // se setean los estados en caso que pase las validaciones
             if ("approved".equalsIgnoreCase(estado)) {
-                //Se setea y guarda la fecha de expiracion en 30 dias post a la fecha
-                usuario.setExpiracionSuscripcion(LocalDateTime.now().plusDays(30L));
+                LocalDateTime desde = usuario.getExpiracionSuscripcion() != null
+                        && usuario.getExpiracionSuscripcion().isAfter(LocalDateTime.now())
+                        ? usuario.getExpiracionSuscripcion()
+                        : LocalDateTime.now();
+                usuario.setExpiracionSuscripcion(desde.plusDays(30L));
                 usuariosRepository.save(usuario);
-                
+
+                suscripcionMovimientoRepository.save(SuscripcionMovimiento.builder()
+                        .usuario(usuario)
+                        .dias(30)
+                        .origen(OrigenMovimientoSuscripcion.PAGO_MP)
+                        .admin(null)
+                        .fechaExpiracionResultante(usuario.getExpiracionSuscripcion())
+                        .creadoEn(LocalDateTime.now())
+                        .build());
+
                 EstadoUsuarioDTO estadoUsuarioDTO = EstadoUsuarioDTO.builder()
                     .userName(usuario.getNombreDeUsuario())
                     .licencia(true)
                     .vencimientoLicencia(usuario.getExpiracionSuscripcion().toString())
                     .build();
-                // Notificar al usuario logueado en WebSocket
                 notificacionService.notificarFechaSuscripcionAUsuario(usuario.getNombreDeUsuario(), estadoUsuarioDTO);
             }
         } catch (Exception e) {
-            System.out.println("Error al procesar webhook: " + e.getMessage());
+            log.error("Error al procesar webhook: {}", e.getMessage(), e);
         }
     }
 
-    public OauthTokenRequestDTO refrescarToken(String refreshToken) {
-        try {
-            RestTemplate restTemplate = new RestTemplate();
-
-            String url = "https://api.mercadopago.com/oauth/token";
-
-            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-            body.add("grant_type", "refresh_token");
-            body.add("client_id", clientId);
-            body.add("client_secret", clientSecret);
-            body.add("refresh_token", refreshToken);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-
-            ResponseEntity<OauthTokenRequestDTO> response = restTemplate.postForEntity(url, request,
-                    OauthTokenRequestDTO.class);
-
-            return response.getBody();
-        } catch (HttpClientErrorException e) {
-            if (e.getStatusCode() == HttpStatus.BAD_REQUEST || e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                throw new RuntimeException("El refresh token fue revocado o no es válido");
-            }
-            throw e;
-        }
-    }
 }

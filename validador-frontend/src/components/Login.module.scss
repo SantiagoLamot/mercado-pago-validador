@@ -1,22 +1,26 @@
-$light-blue: #e6f2ff;
-$medium-blue: #66b2ff;
-$dark-blue: #0059b3;
+@use '../styles/tokens' as tokens;
 
-.loginContainer {
-  background-color: $light-blue;
-  padding: 2rem;
-  min-height: calc(100vh - 40px);
+.title {
+  text-align: center;
+  color: tokens.$text-heading;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: tokens.$space-5;
+}
 
-  .title {
-    color: $dark-blue;
-  }
+.submitButton {
+  width: 100%;
+  margin-top: tokens.$space-2;
+}
 
-  .btnBlue {
-    background-color: $medium-blue;
-    border: none;
+.footerLink {
+  text-align: center;
+  margin-top: tokens.$space-4;
+  font-size: tokens.$font-size-sm;
+  color: tokens.$text-muted;
 
-    &:hover {
-      background-color: $dark-blue;
-    }
+  a {
+    color: tokens.$dark-blue;
+    font-weight: 600;
   }
 }

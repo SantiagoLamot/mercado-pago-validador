@@ -1,0 +1,42 @@
+@use '../styles/tokens' as tokens;
+
+.container {
+  padding: tokens.$space-6;
+  background: tokens.$glass-bg;
+  border: 1px solid tokens.$glass-border;
+  border-radius: tokens.$radius-lg;
+  box-shadow: tokens.$shadow-md;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  h2 {
+    color: tokens.$text-heading;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+}
+
+.status {
+  font-size: tokens.$font-size-sm;
+  color: tokens.$text-muted;
+}
+
+.lista {
+  list-style: none;
+  padding: 0;
+  margin-top: tokens.$space-4;
+}
+
+.item {
+  background-color: rgba(255, 255, 255, 0.7);
+  border-left: 4px solid tokens.$medium-blue;
+  padding: tokens.$space-4;
+  margin-bottom: tokens.$space-4;
+  border-radius: tokens.$radius-sm;
+  box-shadow: tokens.$shadow-sm;
+}
+
+.empty {
+  color: tokens.$text-empty-state;
+  font-style: italic;
+}

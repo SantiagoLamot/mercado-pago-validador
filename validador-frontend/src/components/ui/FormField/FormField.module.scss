@@ -1,0 +1,46 @@
+@use '../../../styles/tokens' as tokens;
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$space-1;
+  margin-bottom: tokens.$space-4;
+  text-align: left;
+}
+
+.label {
+  font-size: tokens.$font-size-sm;
+  font-weight: 600;
+  color: tokens.$text-heading;
+}
+
+.input {
+  font-family: tokens.$font-family-base;
+  font-size: tokens.$font-size-base;
+  padding: tokens.$space-3 tokens.$space-4;
+  border: 1.5px solid tokens.$glass-border;
+  border-radius: tokens.$radius-sm;
+  background-color: rgba(255, 255, 255, 0.7);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: tokens.$medium-blue;
+    background-color: tokens.$white;
+    box-shadow: 0 0 0 4px tokens.$glow-accent;
+  }
+
+  &[aria-invalid='true'] {
+    border-color: tokens.$error-red;
+  }
+}
+
+.error {
+  font-size: tokens.$font-size-sm;
+  color: tokens.$error-red;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: tokens.$text-muted;
+}

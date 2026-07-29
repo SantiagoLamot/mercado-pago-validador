@@ -16,4 +16,9 @@ public class TokenResponse {
     Boolean oauth;
     Boolean licencia;
     String vencimientoLicencia;
+    String rol;
+    String nombre;
+    String apellido;
+    String correo;
+    String nombreEmpresa;
 }

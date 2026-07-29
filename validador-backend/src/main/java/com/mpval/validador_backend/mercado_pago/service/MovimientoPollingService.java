@@ -1,108 +1,158 @@
 package com.mpval.validador_backend.mercado_pago.service;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.Objects;
+import java.util.Map;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import com.mpval.validador_backend.Usuario.entity.Usuario;
-import com.mpval.validador_backend.Usuario.repository.UsuarioRepository;
-import com.mpval.validador_backend.jwt.entity.Token;
-import com.mpval.validador_backend.jwt.repository.TokenRepository;
-import com.mpval.validador_backend.mercado_pago.dto.MovimientoResponse;
-import com.mpval.validador_backend.mercado_pago.entity.Movimiento;
+import com.mercadopago.client.payment.PaymentClient;
+import com.mercadopago.core.MPRequestOptions;
+import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.exceptions.MPException;
+import com.mercadopago.net.MPResultsResourcesPage;
+import com.mercadopago.net.MPSearchRequest;
+import com.mercadopago.resources.payment.Payment;
 import com.mpval.validador_backend.mercado_pago.entity.OauthToken;
 import com.mpval.validador_backend.mercado_pago.repository.OauthTokenRepository;
-import com.mpval.validador_backend.webSocket.dto.PagoNotificacionDTO;
-import com.mpval.validador_backend.webSocket.service.NotificacionService;
+import com.mpval.validador_backend.mercado_pago.util.MercadoPagoRateLimiter;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Worker de respaldo: cubre pagos que no dispararon webhook (tipicamente
+ * transferencias directas al alias/CVU). Recorre las cuentas conectadas
+ * activas cuyo intervalo de chequeo vencio, consulta /v1/payments/search
+ * desde el ultimo chequeo, dedupe+notifica via PagoDetectadoService, y ajusta
+ * la frecuencia de chequeo de cada cuenta segun si hubo movimiento o no.
+ */
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class MovimientoPollingService {
 
-    private final RestTemplate restTemplate;
     private final OauthTokenRepository oauthTokenRepository;
-    private final NotificacionService notificacionService;
-    private final UsuarioRepository usuarioRepository;
-    private final TokenRepository tokenRepository;
+    private final OauthTokenService oauthTokenService;
+    private final PagoDetectadoService pagoDetectadoService;
+    private final MercadoPagoRateLimiter rateLimiter;
 
-    public MovimientoPollingService(RestTemplate r, OauthTokenRepository repo, NotificacionService n,
-            UsuarioRepository u, TokenRepository t) {
-        this.restTemplate = r;
-        this.oauthTokenRepository = repo;
-        this.notificacionService = n;
-        this.usuarioRepository = u;
-        this.tokenRepository = t;
-    }
+    @Value("${polling.min-interval-seconds:30}")
+    private int minIntervalSeconds;
 
-    @Scheduled(fixedRate = 5000)
+    @Value("${polling.max-interval-seconds:300}")
+    private int maxIntervalSeconds;
+
+    @Scheduled(fixedDelay = 5000)
     public void verificarMovimientos() {
-        List<Token> TokensValidos = tokenRepository.findByRevokedFalseAndExpiredFalse();
+        LocalDateTime ahora = LocalDateTime.now();
 
-        LocalDateTime now = LocalDateTime.now();
+        List<OauthToken> candidatas = oauthTokenRepository.findByActiveTrue().stream()
+                .filter(cuenta -> cuenta.getUsuario() != null)
+                .filter(cuenta -> Boolean.TRUE.equals(cuenta.getUsuario().getActivo()))
+                .filter(cuenta -> cuenta.getUsuario().getExpiracionSuscripcion() != null
+                        && cuenta.getUsuario().getExpiracionSuscripcion().isAfter(ahora))
+                .filter(cuenta -> estaVencida(cuenta, ahora))
+                .toList();
 
-        List<Usuario> usuariosConSuscripcionActiva = TokensValidos.stream()
-                .map(Token::getUsuario)
-                .filter(usuario -> usuario.getExpiracionSuscripcion() != null &&
-                        usuario.getExpiracionSuscripcion().isAfter(now))
-                .distinct()
-                .collect(Collectors.toList());
+        if (candidatas.isEmpty()) {
+            return;
+        }
 
-        List<OauthToken> oauthTokens = usuariosConSuscripcionActiva.stream()
-                .map(usuario -> oauthTokenRepository.findByUsuario(usuario))
-                .filter(Objects::nonNull)
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
+        int pagosNuevosTotal = 0;
+        int rateLimitHits = 0;
 
-        for (OauthToken token : oauthTokens) {
-            Usuario usuario = usuarioRepository.findById(token.getUsuario().getId())
-                    .orElseThrow(() -> new RuntimeException("Error al obtener usuario por OauthToken"));
-            String accessToken = token.getAccessToken();
-            Long lastId = token.getLastMovementId();
+        for (OauthToken cuenta : candidatas) {
+            rateLimiter.acquire();
             try {
-                HttpHeaders headers = new HttpHeaders();
-                headers.setBearerAuth(accessToken);
-                HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-                ResponseEntity<MovimientoResponse> response = restTemplate.exchange(
-                        "https://api.mercadopago.com/v1/account/movements?limit=1",
-                        HttpMethod.GET,
-                        entity,
-                        MovimientoResponse.class);
-
-                MovimientoResponse body = response.getBody();
-
-                if (body != null && body.getResults() != null && !body.getResults().isEmpty()) {
-                    Movimiento movimiento = body.getResults().get(0);
-
-                    if ("credit".equals(movimiento.getType()) &&
-                            "available".equals(movimiento.getStatus()) &&
-                            (lastId == null || movimiento.getId() > lastId)) {
-
-                        // Crear DTO de notificación con datos del pago
-                        PagoNotificacionDTO dto = PagoNotificacionDTO.builder()
-                                .mensaje("Recibiste un nuevo pago")
-                                .monto(movimiento.getAmount().doubleValue())
-                                .hora(LocalDateTime.now())
-                                .build();
-                        System.out.println("Se recibio un pago: "+dto.toString());
-                        notificacionService.notificarPagoAUsuario(usuario.getNombreDeUsuario(), dto);
-                        token.setLastMovementId(movimiento.getId());
-                        oauthTokenRepository.save(token);
-                    }
+                pagosNuevosTotal += revisarCuenta(cuenta, ahora);
+            } catch (MPApiException e) {
+                if (e.getStatusCode() == 429) {
+                    rateLimitHits++;
+                    aplicarBackoff(cuenta);
+                    log.warn("Rate limit (429) al consultar pagos de la cuenta MP {}, se espacia el proximo intento a {}s",
+                            cuenta.getUserId(), cuenta.getCheckIntervalSeconds());
+                } else {
+                    log.error("Error de API de Mercado Pago revisando cuenta {}: {}", cuenta.getUserId(), e.getMessage());
                 }
             } catch (Exception e) {
-                System.err.println("Error verificando movimientos de usuario " + usuario.getNombreDeUsuario() + ": "
-                        + e.getMessage());
+                log.error("Error revisando movimientos de la cuenta MP {}: {}", cuenta.getUserId(), e.getMessage(), e);
             }
         }
+
+        log.info("Ciclo de polling: {} cuentas revisadas, {} pagos nuevos, {} rate-limit hits",
+                candidatas.size(), pagosNuevosTotal, rateLimitHits);
     }
 
+    private boolean estaVencida(OauthToken cuenta, LocalDateTime ahora) {
+        if (cuenta.getLastCheckedAt() == null) {
+            return true;
+        }
+        int intervalo = cuenta.getCheckIntervalSeconds() != null ? cuenta.getCheckIntervalSeconds() : minIntervalSeconds;
+        return !cuenta.getLastCheckedAt().plusSeconds(intervalo).isAfter(ahora);
+    }
+
+    private int revisarCuenta(OauthToken cuentaOriginal, LocalDateTime ahora) throws MPException, MPApiException {
+        OauthToken cuenta = oauthTokenService.refrescarSiNecesario(cuentaOriginal);
+        String accessToken = oauthTokenService.desencriptarAccessToken(cuenta);
+
+        LocalDateTime desde = cuenta.getLastCheckedAt() != null ? cuenta.getLastCheckedAt() : ahora.minusMinutes(5);
+
+        Map<String, Object> filtros = new HashMap<>();
+        filtros.put("sort", "date_created");
+        filtros.put("criteria", "asc");
+        filtros.put("range", "date_created");
+        filtros.put("begin_date", formatear(desde));
+        filtros.put("end_date", formatear(ahora));
+
+        MPSearchRequest searchRequest = MPSearchRequest.builder()
+                .limit(50)
+                .filters(filtros)
+                .build();
+
+        PaymentClient client = new PaymentClient();
+        MPResultsResourcesPage<Payment> resultado = client.search(
+                searchRequest,
+                MPRequestOptions.builder().accessToken(accessToken).build());
+
+        List<Payment> pagos = resultado.getResults() != null ? resultado.getResults() : List.of();
+
+        int nuevos = 0;
+        for (Payment pago : pagos) {
+            if (pagoDetectadoService.manejarPagoDetectado(cuenta, pago, "polling")) {
+                nuevos++;
+            }
+        }
+
+        cuenta.setLastCheckedAt(ahora);
+        ajustarIntervalo(cuenta, nuevos > 0);
+        oauthTokenRepository.save(cuenta);
+
+        return nuevos;
+    }
+
+    private void ajustarIntervalo(OauthToken cuenta, boolean huboMovimiento) {
+        int actual = cuenta.getCheckIntervalSeconds() != null ? cuenta.getCheckIntervalSeconds() : minIntervalSeconds;
+        int nuevo = huboMovimiento
+                ? minIntervalSeconds
+                : Math.min(maxIntervalSeconds, (int) Math.ceil(actual * 1.5));
+        cuenta.setCheckIntervalSeconds(Math.max(minIntervalSeconds, nuevo));
+    }
+
+    private void aplicarBackoff(OauthToken cuenta) {
+        int actual = cuenta.getCheckIntervalSeconds() != null ? cuenta.getCheckIntervalSeconds() : minIntervalSeconds;
+        cuenta.setCheckIntervalSeconds(Math.min(maxIntervalSeconds, actual * 2));
+        oauthTokenRepository.save(cuenta);
+    }
+
+    private String formatear(LocalDateTime fecha) {
+        OffsetDateTime odt = fecha.atZone(ZoneId.systemDefault()).toOffsetDateTime();
+        return odt.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    }
 }

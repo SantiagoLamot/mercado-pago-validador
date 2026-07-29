@@ -1,0 +1,60 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql-db-dev
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mercado_pago_validador_db
+    ports:
+      - "3307:3306"
+    networks:
+      - validador-net-dev
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - mysql-data-dev:/var/lib/mysql
+
+  validador-backend:
+    build:
+      context: ./validador-backend
+      target: dev
+    container_name: validador-app-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file:
+      - ./validador-backend/.env
+    volumes:
+      - ./validador-backend/src:/app/src
+      - ./validador-backend/pom.xml:/app/pom.xml
+      - maven-repo:/root/.m2
+    networks:
+      - validador-net-dev
+
+  validador-frontend:
+    build:
+      context: ./validador-frontend
+      target: dev
+    container_name: validador-frontend-dev
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./validador-frontend:/app
+      - /app/node_modules
+    networks:
+      - validador-net-dev
+
+networks:
+  validador-net-dev:
+    driver: bridge
+
+volumes:
+  mysql-data-dev:
+  maven-repo:

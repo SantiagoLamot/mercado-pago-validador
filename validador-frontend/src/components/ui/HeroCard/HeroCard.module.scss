@@ -1,0 +1,53 @@
+@use '../../../styles/tokens' as tokens;
+
+.card {
+  background: tokens.$page-gradient;
+  padding: tokens.$space-6;
+  min-height: calc(100vh - 40px);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.75rem;
+  color: tokens.$white;
+  background: tokens.$gradient-primary;
+  border-radius: 50%;
+  box-shadow: tokens.$shadow-glow;
+  margin-bottom: tokens.$space-5;
+}
+
+.title {
+  color: tokens.$text-heading;
+  font-size: tokens.$font-size-2xl;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: tokens.$space-5;
+}
+
+.text {
+  font-size: tokens.$font-size-lg;
+  line-height: 1.8;
+  max-width: 640px;
+  margin-bottom: tokens.$space-6;
+  color: tokens.$text-muted;
+  background: tokens.$glass-bg;
+  border: 1px solid tokens.$glass-border;
+  border-radius: tokens.$radius-md;
+  padding: tokens.$space-5 tokens.$space-6;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.highlight {
+  color: tokens.$dark-blue;
+  font-weight: 700;
+}

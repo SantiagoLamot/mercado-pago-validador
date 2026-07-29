@@ -1,22 +1,53 @@
-$light-blue: #e6f2ff;
-$medium-blue: #66b2ff;
-$dark-blue: #0059b3;
+@use '../styles/tokens' as tokens;
 
-.Container {
-  background-color: $light-blue;
-  padding: 2rem;
-  min-height: calc(100vh - 40px);
+.title {
+  text-align: center;
+  color: tokens.$text-heading;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: tokens.$space-2;
+}
 
-  .title {
-    color: $dark-blue;
+.subtitle {
+  text-align: center;
+  color: tokens.$text-muted;
+  margin-bottom: tokens.$space-5;
+}
+
+.sectionTitle {
+  font-size: tokens.$font-size-base;
+  font-weight: 700;
+  color: tokens.$text-heading;
+  margin: 0 0 tokens.$space-3;
+
+  &:not(:first-child) {
+    margin-top: tokens.$space-5;
   }
+}
 
-  .btnBlue {
-    background-color: $medium-blue;
-    border: none;
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 tokens.$space-4;
 
-    &:hover {
-      background-color: $dark-blue;
-    }
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.submitButton {
+  width: 100%;
+  margin-top: tokens.$space-2;
+}
+
+.footerLink {
+  text-align: center;
+  margin-top: tokens.$space-4;
+  font-size: tokens.$font-size-sm;
+  color: tokens.$text-muted;
+
+  a {
+    color: tokens.$dark-blue;
+    font-weight: 600;
   }
 }

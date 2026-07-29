@@ -1,0 +1,11 @@
+@use '../../../styles/tokens' as tokens;
+
+.card {
+  background-color: tokens.$glass-bg;
+  border: 1px solid tokens.$glass-border;
+  border-radius: tokens.$radius-lg;
+  box-shadow: tokens.$shadow-md;
+  padding: tokens.$space-6;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}

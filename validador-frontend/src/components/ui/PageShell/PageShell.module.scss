@@ -1,0 +1,23 @@
+@use '../../../styles/tokens' as tokens;
+
+.shell {
+  background: tokens.$page-gradient;
+  padding: tokens.$space-6 tokens.$space-4;
+  min-height: calc(100vh - 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.transparent {
+    background: transparent;
+  }
+}
+
+.inner {
+  width: 100%;
+  max-width: 480px;
+
+  &.wide {
+    max-width: 720px;
+  }
+}

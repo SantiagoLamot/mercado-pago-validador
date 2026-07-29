@@ -3,6 +3,8 @@ package com.mpval.validador_backend.Usuario.entity;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,4 +31,11 @@ public class Usuario {
     private String apellido;
     private String nombreEmpresa;
     private LocalDateTime expiracionSuscripcion;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private Rol rol = Rol.EMPRESA;
+
+    @Builder.Default
+    private Boolean activo = true;
 }

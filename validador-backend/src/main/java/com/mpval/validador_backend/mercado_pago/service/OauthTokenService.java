@@ -24,6 +24,9 @@ import com.mpval.validador_backend.mercado_pago.entity.OauthToken;
 import com.mpval.validador_backend.mercado_pago.repository.OauthTokenRepository;
 import com.mpval.validador_backend.mercado_pago.util.EncriptadoUtil;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class OauthTokenService {
 
@@ -158,6 +161,63 @@ public class OauthTokenService {
         }
         catch (HttpClientErrorException e) {
             return false;
+        }
+    }
+
+    /**
+     * Refresca el access_token de una cuenta conectada si esta por vencer (o ya
+     * vencio). Mercado Pago rota el refresh_token en cada uso, asi que se
+     * re-encriptan y persisten ambos tokens nuevos.
+     */
+    public OauthToken refrescarSiNecesario(OauthToken cuenta) {
+        if (cuenta.getExpiresAt() == null || cuenta.getExpiresAt().isAfter(LocalDateTime.now().plusMinutes(5))) {
+            return cuenta;
+        }
+        try {
+            String refreshTokenPlano = encriptadoUtil.desencriptar(cuenta.getRefreshToken());
+            OauthTokenRequestDTO nuevo = solicitarRefreshToken(refreshTokenPlano);
+
+            cuenta.setAccessToken(encriptadoUtil.encriptar(nuevo.getAccessToken()));
+            cuenta.setRefreshToken(encriptadoUtil.encriptar(nuevo.getRefreshToken()));
+            cuenta.setExpiresAt(LocalDateTime.now().plusSeconds(nuevo.getExpiresIn()));
+
+            OauthToken guardado = oauthRepository.save(cuenta);
+            log.info("Access token refrescado para cuenta MP {}", cuenta.getUserId());
+            return guardado;
+        } catch (Exception e) {
+            log.error("No se pudo refrescar el token de la cuenta MP {}: {}", cuenta.getUserId(), e.getMessage());
+            throw new RuntimeException("Error al refrescar token", e);
+        }
+    }
+
+    public String desencriptarAccessToken(OauthToken cuenta) {
+        return encriptadoUtil.desencriptar(cuenta.getAccessToken());
+    }
+
+    private OauthTokenRequestDTO solicitarRefreshToken(String refreshToken) {
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+
+            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+            body.add("grant_type", "refresh_token");
+            body.add("client_id", clientId);
+            body.add("client_secret", clientSecret);
+            body.add("refresh_token", refreshToken);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+
+            ResponseEntity<OauthTokenRequestDTO> response = restTemplate.postForEntity(
+                    "https://api.mercadopago.com/oauth/token", request, OauthTokenRequestDTO.class);
+
+            return response.getBody();
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.BAD_REQUEST || e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                throw new RuntimeException("El refresh token fue revocado o no es válido");
+            }
+            throw e;
         }
     }
 }

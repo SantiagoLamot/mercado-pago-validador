@@ -45,7 +45,19 @@ public class AuthService {
         final String jwtToken = jwtServicio.generateToken(savedUser);
         final String refreshToken = jwtServicio.generateRefreshToken(savedUser);
         saveUserToken(savedUser, jwtToken);
-        return new TokenResponse(jwtToken, refreshToken, user.getNombreDeUsuario(), false, false, null);
+        return TokenResponse.builder()
+                .accessToken(jwtToken)
+                .refreshToken(refreshToken)
+                .userName(savedUser.getNombreDeUsuario())
+                .oauth(false)
+                .licencia(false)
+                .vencimientoLicencia(null)
+                .rol(savedUser.getRol().name())
+                .nombre(savedUser.getNombre())
+                .apellido(savedUser.getApellido())
+                .correo(savedUser.getCorreo())
+                .nombreEmpresa(savedUser.getNombreEmpresa())
+                .build();
     }
 
     public TokenResponse authenticate(final AuthRequestDTO request) {
@@ -60,8 +72,19 @@ public class AuthService {
         revokeAllUserTokens(user);
         saveUserToken(user, accessToken);
         Map<String, Object> estado = getEstadoUsuario(user);
-        return new TokenResponse(accessToken, refreshToken, user.getNombreDeUsuario(), (Boolean)estado.get("oauth"), (Boolean)estado.get("licencia"),
-                (String)estado.get("fechaExpiracion"));
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .userName(user.getNombreDeUsuario())
+                .oauth((Boolean) estado.get("oauth"))
+                .licencia((Boolean) estado.get("licencia"))
+                .vencimientoLicencia((String) estado.get("fechaExpiracion"))
+                .rol(user.getRol().name())
+                .nombre(user.getNombre())
+                .apellido(user.getApellido())
+                .correo(user.getCorreo())
+                .nombreEmpresa(user.getNombreEmpresa())
+                .build();
     }
 
     private void saveUserToken(Usuario user, String jwtToken) {
@@ -104,8 +127,19 @@ public class AuthService {
         revokeAllUserTokens(user);
         saveUserToken(user, accessToken);
         Map<String, Object> estado = getEstadoUsuario(user);
-        return new TokenResponse(accessToken, refreshToken, user.getNombreDeUsuario(), (Boolean)estado.get("oauth"), (Boolean)estado.get("licencia"),
-                (String)estado.get("fechaExpiracion"));
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .userName(user.getNombreDeUsuario())
+                .oauth((Boolean) estado.get("oauth"))
+                .licencia((Boolean) estado.get("licencia"))
+                .vencimientoLicencia((String) estado.get("fechaExpiracion"))
+                .rol(user.getRol().name())
+                .nombre(user.getNombre())
+                .apellido(user.getApellido())
+                .correo(user.getCorreo())
+                .nombreEmpresa(user.getNombreEmpresa())
+                .build();
     }
 
     private Map<String, Object> getEstadoUsuario(Usuario user) {

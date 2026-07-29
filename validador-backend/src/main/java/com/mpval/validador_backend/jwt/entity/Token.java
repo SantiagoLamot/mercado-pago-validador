@@ -3,6 +3,8 @@ package com.mpval.validador_backend.jwt.entity;
 import com.mpval.validador_backend.Usuario.entity.Usuario;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,6 +28,7 @@ public class Token {
     private Long id;
     
     private String token;
+    @Enumerated(EnumType.STRING)
     @Builder.Default
     private Token_Type tokenType = Token_Type.BEARER;
     private Boolean revoked;

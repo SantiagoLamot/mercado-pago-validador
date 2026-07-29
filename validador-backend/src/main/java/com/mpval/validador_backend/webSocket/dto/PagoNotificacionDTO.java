@@ -16,5 +16,8 @@ public class PagoNotificacionDTO {
     private Double monto;
     private String email;
     private LocalDateTime hora;
+    private String operationType;
+    private String paymentTypeId;
+    private String origen;
 }
 

@@ -34,7 +34,13 @@ public class OauthToken {
     private LocalDateTime expiresAt;
     private Boolean liveMode;
     private Long lastMovementId;
-    
+
+    @Builder.Default
+    private Boolean active = true;
+    private LocalDateTime lastCheckedAt;
+    @Builder.Default
+    private Integer checkIntervalSeconds = 30;
+
     @OneToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;

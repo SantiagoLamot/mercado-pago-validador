@@ -13,4 +13,5 @@ public interface OauthTokenRepository extends JpaRepository<OauthToken, Long> {
     Optional <OauthToken> findByUserId(Long idMp);
     List <OauthToken> findByUsuario(Usuario usuario);
     List<OauthToken> findByAccessTokenIsNotNull();
+    List<OauthToken> findByActiveTrue();
 }
