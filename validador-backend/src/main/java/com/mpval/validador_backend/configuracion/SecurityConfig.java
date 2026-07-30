@@ -96,7 +96,9 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "https://generous-evenly-skylark.ngrok-free.app"));
+                "https://generous-evenly-skylark.ngrok-free.app",
+                "https://mpvalidador.online",
+                "https://www.mpvalidador.online"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "*"));
         configuration.setExposedHeaders(List.of("Authorization"));
