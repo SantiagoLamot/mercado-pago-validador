@@ -13,7 +13,7 @@ public class EncriptadoUtil {
     @Value("${algoritmoEncriptar}")
     private String algoritmoEncriptar;
     
-    @Value("${secretKeyEncriptar}")
+    @Value("${secretKeyCifrado}")
     private String secretKeyEncriptar;
 
     public String encriptar(String plainText) {
