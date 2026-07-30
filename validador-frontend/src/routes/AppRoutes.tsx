@@ -7,6 +7,7 @@ import { Login } from '../components/Login';
 import { Register } from '../components/Register';
 import { Suscripcion } from '../components/Suscripcion';
 import { Oauth } from '../components/Oauth';
+import { OauthCallback } from '../components/OauthCallback';
 import Notificaciones from '../components/Notificaciones';
 import { CambiarContrasena } from '../components/CambiarContrasena';
 import { AdminEmpresas } from '../components/admin/AdminEmpresas';
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
       { path: '/register', element: <Register /> },
       { path: '/suscripcion', element: <Suscripcion /> },
       { path: '/oauth', element: <Oauth /> },
+      { path: '/oauth/callback', element: <OauthCallback /> },
       { path: '/notificaciones', element: <Notificaciones /> },
       { path: '/perfil/cambiar-contrasena', element: <CambiarContrasena /> },
       {
